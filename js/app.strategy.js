@@ -1,4 +1,4 @@
-﻿(function () {
+﻿﻿(function () {
   const modules = (window.AppModules = window.AppModules || {});
 
   modules.initStrategy = function (ctx, state) {

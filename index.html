@@ -67,13 +67,6 @@
         y.parentNode.insertBefore(t, y);
       })(window, document, "clarity", "script", "vb1z842wno");
     </script>
-    <script
-      type="text/javascript"
-      charset="UTF-8"
-      src="https://cdn.adwork.net/js/makemoney.js"
-      onerror="window.__adworkScriptError=true;window.dispatchEvent(new Event('adwork:failed'));"
-      async
-    ></script>
     <style>
       html.preload body {
         background: #0b0f14;
@@ -290,7 +283,7 @@
           </div>
         </div>
         <div class="hero-nav-stack">
-          <div v-if="canShowAds && isPortrait" class="adwork-hero-slot is-ad-soft-hidden" aria-label="adwork-banner-mobile">
+          <div v-if="canShowAds && isAdPortrait" class="adwork-hero-slot is-ad-soft-hidden" aria-label="adwork-banner-mobile">
             <div class="adwork-net adwork-auto" data-id="1050" data-placeholder="none"></div>
           </div>
           <nav class="main-nav hero-nav">
@@ -880,7 +873,7 @@
             </div>
           </div>
 
-          <div v-if="canShowAds && !isPortrait" class="card scheme-inline-ad-card scheme-inline-ad-top is-ad-soft-hidden" aria-label="adwork-banner-desktop">
+          <div v-if="canShowAds && !isAdPortrait" class="card scheme-inline-ad-card scheme-inline-ad-top is-ad-soft-hidden" aria-label="adwork-banner-desktop">
             <div class="adwork-net adwork-auto" data-id="1050" data-placeholder="none"></div>
           </div>
 

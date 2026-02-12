@@ -10,12 +10,17 @@
     const showPlanConfig = state.showPlanConfig;
     const showPlanConfigHintDot = state.showPlanConfigHintDot;
     const isPortrait = state.isPortrait;
+    const isAdPortrait = state.isAdPortrait;
     const canShowAds = state.canShowAds;
     const updateLangMenuPlacement = state.updateLangMenuPlacement;
+    const loadScriptOnce = state.loadScriptOnce;
 
     const root = typeof document !== "undefined" ? document.documentElement : null;
 
     const allowedAdHosts = new Set(["end.canmoe.com", "127.0.0.1"]);
+    const adworkScriptSrc = "https://cdn.adwork.net/js/makemoney.js";
+    const adMobileBreakpoint = 960;
+    let adScriptLoadingPromise = null;
 
     const evaluateAdVisibility = () => {
       if (typeof window === "undefined") {
@@ -33,6 +38,48 @@
     const handleAdFailed = () => {
       canShowAds.value = false;
       scheduleAdSlotVisibility();
+    };
+
+    const ensureAdScriptLoaded = () => {
+      if (typeof window === "undefined" || typeof document === "undefined") {
+        return Promise.resolve(false);
+      }
+      if (!canShowAds.value || window.__adworkScriptError) {
+        return Promise.resolve(false);
+      }
+      if (window.__adworkScriptReady) {
+        return Promise.resolve(true);
+      }
+      if (adScriptLoadingPromise) {
+        return adScriptLoadingPromise;
+      }
+      const loadTask =
+        typeof loadScriptOnce === "function"
+          ? loadScriptOnce(adworkScriptSrc)
+          : new Promise((resolve, reject) => {
+              const script = document.createElement("script");
+              script.src = adworkScriptSrc;
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = reject;
+              document.body.appendChild(script);
+            });
+      adScriptLoadingPromise = loadTask
+        .then(() => {
+          window.__adworkScriptReady = true;
+          scheduleAdSlotVisibility();
+          primeAdSlotVisibility();
+          return true;
+        })
+        .catch(() => {
+          window.__adworkScriptError = true;
+          window.dispatchEvent(new Event("adwork:failed"));
+          return false;
+        })
+        .finally(() => {
+          adScriptLoadingPromise = null;
+        });
+      return adScriptLoadingPromise;
     };
 
     const adSlotSelector = ".adwork-hero-slot, .scheme-inline-ad-top";
@@ -80,29 +127,46 @@
       return bg === "rgb(255, 255, 255)" || bg === "rgba(255, 255, 255, 1)";
     };
 
+    const hasMeaningfulAdChildren = (node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      const children = Array.from(node.children || []);
+      if (!children.length) return false;
+      return children.some((child) => {
+        if (!(child instanceof HTMLElement)) return false;
+        if (child.matches("script, style, link, meta")) return false;
+        if (child.matches("iframe, img, ins, object, embed, video, canvas, svg, a, button")) {
+          return true;
+        }
+        const text = (child.textContent || "").trim();
+        if (text.length > 0) return true;
+        return hasRenderableAdContent(child);
+      });
+    };
+
     const updateAdSlotVisibility = () => {
       if (typeof window === "undefined" || typeof document === "undefined") return;
       const slots = document.querySelectorAll(adSlotSelector);
       slots.forEach((slot) => {
         const container = slot.querySelector(".adwork-net");
+        const hasContainer = container instanceof HTMLElement;
         const richNodes =
-          container instanceof HTMLElement
+          hasContainer
             ? Array.from(
                 container.querySelectorAll("iframe, img, ins, object, embed, video, canvas, svg")
               )
             : [];
         const hasRichRenderable = richNodes.some(hasRenderableAdContent);
+        const hasMeaningfulChildren =
+          hasContainer && hasMeaningfulAdChildren(container);
         const hasContainerRenderable =
-          container instanceof HTMLElement && hasRenderableAdContent(container);
+          hasContainer && hasRenderableAdContent(container);
         const placeholderLike =
-          container instanceof HTMLElement && !hasRichRenderable && isLikelyPlaceholderNode(container);
-        const shouldShow =
-          canShowAds.value &&
-          container instanceof HTMLElement &&
-          !placeholderLike &&
-          (hasRichRenderable || hasContainerRenderable);
-        slot.classList.toggle("is-ad-hidden", !shouldShow);
-        slot.classList.toggle("is-ad-soft-hidden", !shouldShow);
+          hasContainer && !hasRichRenderable && isLikelyPlaceholderNode(container);
+        const hasRenderable = hasRichRenderable || (hasMeaningfulChildren && hasContainerRenderable);
+        const shouldHardHide = !canShowAds.value || !hasContainer || placeholderLike;
+        const shouldSoftHide = !shouldHardHide && !hasRenderable;
+        slot.classList.toggle("is-ad-hidden", shouldHardHide);
+        slot.classList.toggle("is-ad-soft-hidden", shouldSoftHide);
       });
     };
 
@@ -189,6 +253,7 @@
       } else {
         isPortrait.value = window.innerHeight >= window.innerWidth;
       }
+      isAdPortrait.value = window.innerWidth <= adMobileBreakpoint;
       if (showLangMenu.value && updateLangMenuPlacement) {
         if (typeof nextTick === "function") {
           nextTick(updateLangMenuPlacement);
@@ -333,6 +398,15 @@
         evaluateAdVisibility();
         window.addEventListener("adwork:failed", handleAdFailed);
         window.addEventListener("resize", scheduleAdSlotVisibility);
+        if (canShowAds.value) {
+          if (typeof nextTick === "function") {
+            nextTick(() => {
+              ensureAdScriptLoaded();
+            });
+          } else {
+            ensureAdScriptLoaded();
+          }
+        }
       }
       document.addEventListener("click", handleAdPotentialMutation, true);
       document.addEventListener("click", handleDocClick);
@@ -345,7 +419,10 @@
       }
     });
 
-    watch([canShowAds, isPortrait], () => {
+    watch([canShowAds, isAdPortrait], () => {
+      if (canShowAds.value) {
+        ensureAdScriptLoaded();
+      }
       primeAdSlotVisibility();
     });
 

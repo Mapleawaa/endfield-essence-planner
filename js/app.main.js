@@ -426,6 +426,7 @@
         isTutorialGuideWeapon: state.isTutorialGuideWeapon,
         canShowAds: state.canShowAds,
         isPortrait: state.isPortrait,
+        isAdPortrait: state.isAdPortrait,
         startTutorial: state.startTutorial,
         nextTutorialStep: state.nextTutorialStep,
         prevTutorialStep: state.prevTutorialStep,

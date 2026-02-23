@@ -1,50 +1,88 @@
 (function () {
 
-  const escapeHtml = (value) =>
-    String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-
   const renderBootError = ({ title, summary, details, suggestions }) => {
-    const safeTitle = escapeHtml(title || "页面加载失败");
-    const safeSummary = escapeHtml(summary || "出现未知错误，请稍后重试。");
-    const detailList = Array.isArray(details) ? details.filter(Boolean) : [];
-    const suggestionList = Array.isArray(suggestions) ? suggestions.filter(Boolean) : [];
-    const detailHtml = detailList.length
-      ? `<ul style="margin:8px 0 0 18px;padding:0;line-height:1.65;">${detailList
-          .map((item) => `<li>${escapeHtml(item)}</li>`)
-          .join("")}</ul>`
-      : "";
-    const suggestionHtml = suggestionList.length
-      ? `<ol style="margin:8px 0 0 18px;padding:0;line-height:1.65;">${suggestionList
-          .map((item) => `<li>${escapeHtml(item)}</li>`)
-          .join("")}</ol>`
-      : "";
+    const safeTitle = String(title || "页面加载失败");
+    const safeSummary = String(summary || "出现未知错误，请稍后重试。");
+    const detailList = Array.isArray(details) ? details.filter(Boolean).map(String) : [];
+    const suggestionList = Array.isArray(suggestions) ? suggestions.filter(Boolean).map(String) : [];
 
-    document.body.innerHTML = `
-      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0b0f14;color:#e6e9ef;font-family:'Microsoft YaHei UI','PingFang SC',sans-serif;">
-        <div style="width:min(680px,92vw);border:1px solid rgba(243,108,108,0.42);border-radius:14px;padding:18px 18px 16px;background:rgba(26,14,18,0.84);box-shadow:0 14px 34px rgba(0,0,0,0.38);">
-          <div style="font-size:16px;font-weight:700;letter-spacing:0.03em;color:#ff9e9e;">${safeTitle}</div>
-          <div style="margin-top:8px;line-height:1.7;color:#ffd7d7;">${safeSummary}</div>
-          ${
-            detailHtml
-              ? `<div style="margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);"><div style="font-weight:600;color:#ffd1d1;">错误详情</div>${detailHtml}</div>`
-              : ""
-          }
-          ${
-            suggestionHtml
-              ? `<div style="margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);"><div style="font-weight:600;color:#f2e5c9;">建议处理</div>${suggestionHtml}</div>`
-              : ""
-          }
-          <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-            <button onclick="location.reload()" style="cursor:pointer;border:1px solid rgba(255,255,255,0.45);border-radius:999px;padding:6px 14px;background:rgba(12,18,28,0.9);color:#fff;">刷新页面</button>
-            <a href="https://github.com/cmyyx/endfield-essence-planner/issues" target="_blank" rel="noreferrer" style="display:inline-flex;align-items:center;text-decoration:none;border:1px solid rgba(77,214,201,0.45);border-radius:999px;padding:6px 14px;background:rgba(12,18,28,0.85);color:#c9fff7;">反馈问题</a>
-          </div>
-        </div>
-      </div>`;
+    const root = document.createElement("div");
+    root.style.cssText =
+      "min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0b0f14;color:#e6e9ef;font-family:'Microsoft YaHei UI','PingFang SC',sans-serif;";
+    const card = document.createElement("div");
+    card.style.cssText =
+      "width:min(680px,92vw);border:1px solid rgba(243,108,108,0.42);border-radius:14px;padding:18px 18px 16px;background:rgba(26,14,18,0.84);box-shadow:0 14px 34px rgba(0,0,0,0.38);";
+    const titleEl = document.createElement("div");
+    titleEl.style.cssText = "font-size:16px;font-weight:700;letter-spacing:0.03em;color:#ff9e9e;";
+    titleEl.textContent = safeTitle;
+    const summaryEl = document.createElement("div");
+    summaryEl.style.cssText = "margin-top:8px;line-height:1.7;color:#ffd7d7;";
+    summaryEl.textContent = safeSummary;
+    card.appendChild(titleEl);
+    card.appendChild(summaryEl);
+
+    if (detailList.length) {
+      const detailWrap = document.createElement("div");
+      detailWrap.style.cssText =
+        "margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);";
+      const detailTitle = document.createElement("div");
+      detailTitle.style.cssText = "font-weight:600;color:#ffd1d1;";
+      detailTitle.textContent = "错误详情";
+      const detailUl = document.createElement("ul");
+      detailUl.style.cssText = "margin:8px 0 0 18px;padding:0;line-height:1.65;";
+      detailList.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        detailUl.appendChild(li);
+      });
+      detailWrap.appendChild(detailTitle);
+      detailWrap.appendChild(detailUl);
+      card.appendChild(detailWrap);
+    }
+
+    if (suggestionList.length) {
+      const suggestWrap = document.createElement("div");
+      suggestWrap.style.cssText =
+        "margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);";
+      const suggestTitle = document.createElement("div");
+      suggestTitle.style.cssText = "font-weight:600;color:#f2e5c9;";
+      suggestTitle.textContent = "建议处理";
+      const suggestOl = document.createElement("ol");
+      suggestOl.style.cssText = "margin:8px 0 0 18px;padding:0;line-height:1.65;";
+      suggestionList.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        suggestOl.appendChild(li);
+      });
+      suggestWrap.appendChild(suggestTitle);
+      suggestWrap.appendChild(suggestOl);
+      card.appendChild(suggestWrap);
+    }
+
+    const actionRow = document.createElement("div");
+    actionRow.style.cssText = "margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;";
+    const refreshButton = document.createElement("button");
+    refreshButton.type = "button";
+    refreshButton.style.cssText =
+      "cursor:pointer;border:1px solid rgba(255,255,255,0.45);border-radius:999px;padding:6px 14px;background:rgba(12,18,28,0.9);color:#fff;";
+    refreshButton.textContent = "刷新页面";
+    refreshButton.addEventListener("click", () => {
+      window.location.reload();
+    });
+    const feedbackLink = document.createElement("a");
+    feedbackLink.href = "https://github.com/cmyyx/endfield-essence-planner/issues";
+    feedbackLink.target = "_blank";
+    feedbackLink.rel = "noreferrer";
+    feedbackLink.style.cssText =
+      "display:inline-flex;align-items:center;text-decoration:none;border:1px solid rgba(77,214,201,0.45);border-radius:999px;padding:6px 14px;background:rgba(12,18,28,0.85);color:#c9fff7;";
+    feedbackLink.textContent = "反馈问题";
+    actionRow.appendChild(refreshButton);
+    actionRow.appendChild(feedbackLink);
+    card.appendChild(actionRow);
+
+    root.appendChild(card);
+    document.body.textContent = "";
+    document.body.appendChild(root);
   };
 
   if (typeof window !== "undefined") {

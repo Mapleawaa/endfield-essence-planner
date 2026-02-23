@@ -6,8 +6,11 @@
       window.__renderBootError(payload);
       return;
     }
-    document.body.innerHTML =
-      "<div style='padding:24px;color:#f36c6c;font-family:Microsoft YaHei UI;'>页面启动失败，请刷新后重试。</div>";
+    const fallback = document.createElement("div");
+    fallback.style.cssText = "padding:24px;color:#f36c6c;font-family:Microsoft YaHei UI;";
+    fallback.textContent = "页面启动失败，请刷新后重试。";
+    document.body.textContent = "";
+    document.body.appendChild(fallback);
   };
 
   if (!createApp) {

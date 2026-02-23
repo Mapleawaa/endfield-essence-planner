@@ -18,24 +18,6 @@
    - `vendor/vue.global.prod.js`
 2. 确保武器图片放在 `image/` 目录（图片文件名需与武器名称一致）
 
-> 注：本项目 **不依赖外部 CDN**。
-
-## 官方部署安全检测（域名 / 内嵌）
-
-项目会读取响应头 `x-endfield-essence-planner-official`。  
-仅当该响应头值为 `1` 时，才启用“非官方域名提示”和“iframe 内嵌提示”。
-
-- 官方站点：请在部署平台为站点响应添加 header  
-  `x-endfield-essence-planner-official: 1`
-- 开源二次部署：默认不加该 header，即不会触发官方域名提示
-
-Cloudflare 可在对应项目的响应头规则中添加该 header（生产域名即可）。
-
-## 本地广告位调试
-
-- 本地访问 `127.0.0.1` / `localhost` 时，可通过 URL 参数 `?adPreview=1` 预览广告位样式。
-- 页面也提供本地悬浮按钮“一键开启预览广告位”。
-
 ## 数据位置
 
 为方便后续更新，数据集中在：

@@ -200,7 +200,7 @@
       const overlay = document.getElementById("app-preload");
       if (!overlay) return;
       const title = overlay.querySelector(".preload-title");
-      const sub = overlay.querySelector(".preload-sub");
+      const sub = overlay.querySelector(".preload-note") || overlay.querySelector(".preload-sub");
       if (title) title.textContent = t("少女祈祷中");
       if (sub) sub.textContent = t("首次打开或强制刷新可能稍慢");
     };

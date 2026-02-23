@@ -615,7 +615,7 @@
         letter-spacing: 0.04em;
       }
 
-      .ad-preview-notice {
+      .slot-preview-notice {
         margin: 0 0 14px;
         padding: 10px 12px;
         border-radius: 12px;
@@ -626,7 +626,7 @@
         letter-spacing: 0.04em;
       }
 
-      .ad-preview-entry {
+      .slot-preview-entry {
         position: fixed;
         right: 14px;
         bottom: 86px;
@@ -641,7 +641,7 @@
         box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
       }
 
-      .ad-preview-entry:hover {
+      .slot-preview-entry:hover {
         border-color: rgba(77, 214, 201, 0.65);
       }
 

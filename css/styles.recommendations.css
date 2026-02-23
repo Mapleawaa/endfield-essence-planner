@@ -11,7 +11,7 @@
         box-shadow: var(--shadow);
       }
 
-      .scheme-inline-ad-card {
+      .slot-inline-card {
         padding: 10px;
         min-height: 132px;
         display: flex;
@@ -21,17 +21,17 @@
         position: relative;
       }
 
-      .scheme-inline-ad-card .adwork-net {
+      .slot-inline-card .slot-provider-net {
         display: block;
         width: 100%;
       }
 
-      .scheme-inline-ad-top {
+      .slot-inline-top {
         margin-top: 4px;
         margin-bottom: 2px;
       }
 
-      .adwork-hero-slot {
+      .slot-hero-shell {
         margin: 0;
         padding: 4px 6px;
         border-radius: var(--radius-lg);
@@ -46,12 +46,12 @@
         position: relative;
       }
 
-      .adwork-hero-slot .adwork-net {
+      .slot-hero-shell .slot-provider-net {
         display: block;
         width: 100%;
       }
 
-      .ad-close-button {
+      .slot-close-button {
         position: absolute;
         top: 6px;
         right: 6px;
@@ -71,15 +71,15 @@
         justify-content: center;
       }
 
-      .ad-close-button:hover {
+      .slot-close-button:hover {
         border-color: rgba(255, 255, 255, 0.45);
         color: var(--text);
       }
 
-      .adwork-hero-slot.is-ad-hidden .ad-close-button,
-      .scheme-inline-ad-top.is-ad-hidden .ad-close-button,
-      .adwork-hero-slot.is-ad-soft-hidden .ad-close-button,
-      .scheme-inline-ad-top.is-ad-soft-hidden .ad-close-button {
+      .slot-hero-shell.is-slot-hidden .slot-close-button,
+      .slot-inline-top.is-slot-hidden .slot-close-button,
+      .slot-hero-shell.is-slot-compact .slot-close-button,
+      .slot-inline-top.is-slot-compact .slot-close-button {
         display: inline-flex;
         visibility: visible;
         opacity: 1;
@@ -87,7 +87,7 @@
         z-index: 5;
       }
 
-      .ad-preview-banner {
+      .slot-preview-banner {
         width: min(100%, 640px);
         min-height: 88px;
         border-radius: 12px;
@@ -103,10 +103,10 @@
         padding: 12px 14px;
       }
 
-      .adwork-hero-slot.is-ad-hidden,
-      .scheme-inline-ad-top.is-ad-hidden,
-      .adwork-hero-slot.is-ad-soft-hidden,
-      .scheme-inline-ad-top.is-ad-soft-hidden {
+      .slot-hero-shell.is-slot-hidden,
+      .slot-inline-top.is-slot-hidden,
+      .slot-hero-shell.is-slot-compact,
+      .slot-inline-top.is-slot-compact {
         display: flex;
         align-items: center;
         flex-direction: column;
@@ -120,18 +120,18 @@
         justify-content: center;
       }
 
-      .adwork-hero-slot.is-ad-hidden .adwork-net,
-      .scheme-inline-ad-top.is-ad-hidden .adwork-net,
-      .adwork-hero-slot.is-ad-soft-hidden .adwork-net,
-      .scheme-inline-ad-top.is-ad-soft-hidden .adwork-net {
+      .slot-hero-shell.is-slot-hidden .slot-provider-net,
+      .slot-inline-top.is-slot-hidden .slot-provider-net,
+      .slot-hero-shell.is-slot-compact .slot-provider-net,
+      .slot-inline-top.is-slot-compact .slot-provider-net {
         min-height: 0;
         height: 0;
         max-height: 0;
         overflow: hidden;
       }
 
-      .adwork-hero-slot.is-ad-hidden::before,
-      .scheme-inline-ad-top.is-ad-hidden::before {
+      .slot-hero-shell.is-slot-hidden::before,
+      .slot-inline-top.is-slot-hidden::before {
         content: "广告位";
         font-size: 13px;
         font-weight: 700;
@@ -152,8 +152,8 @@
         pointer-events: none;
       }
 
-      .adwork-hero-slot.is-ad-soft-hidden::before,
-      .scheme-inline-ad-top.is-ad-soft-hidden::before {
+      .slot-hero-shell.is-slot-compact::before,
+      .slot-inline-top.is-slot-compact::before {
         content: "广告位";
         font-size: 13px;
         font-weight: 700;
@@ -173,10 +173,10 @@
         pointer-events: none;
       }
 
-      .adwork-hero-slot.is-ad-hidden::after,
-      .scheme-inline-ad-top.is-ad-hidden::after,
-      .adwork-hero-slot.is-ad-soft-hidden::after,
-      .scheme-inline-ad-top.is-ad-soft-hidden::after {
+      .slot-hero-shell.is-slot-hidden::after,
+      .slot-inline-top.is-slot-hidden::after,
+      .slot-hero-shell.is-slot-compact::after,
+      .slot-inline-top.is-slot-compact::after {
         content: "广告未显示属正常，仅占位";
         font-size: 11px;
         line-height: 1.3;
@@ -187,27 +187,27 @@
         pointer-events: none;
       }
 
-      [data-theme="light"] .adwork-hero-slot.is-ad-hidden::before,
-      [data-theme="light"] .scheme-inline-ad-top.is-ad-hidden::before,
-      [data-theme="light"] .adwork-hero-slot.is-ad-soft-hidden::before,
-      [data-theme="light"] .scheme-inline-ad-top.is-ad-soft-hidden::before {
+      [data-theme="light"] .slot-hero-shell.is-slot-hidden::before,
+      [data-theme="light"] .slot-inline-top.is-slot-hidden::before,
+      [data-theme="light"] .slot-hero-shell.is-slot-compact::before,
+      [data-theme="light"] .slot-inline-top.is-slot-compact::before {
         color: rgba(35, 55, 80, 0.96);
         border-color: rgba(74, 111, 150, 0.45);
         background: rgba(190, 214, 239, 0.28);
         text-shadow: none;
       }
 
-      [data-theme="light"] .adwork-hero-slot.is-ad-hidden::after,
-      [data-theme="light"] .scheme-inline-ad-top.is-ad-hidden::after,
-      [data-theme="light"] .adwork-hero-slot.is-ad-soft-hidden::after,
-      [data-theme="light"] .scheme-inline-ad-top.is-ad-soft-hidden::after {
+      [data-theme="light"] .slot-hero-shell.is-slot-hidden::after,
+      [data-theme="light"] .slot-inline-top.is-slot-hidden::after,
+      [data-theme="light"] .slot-hero-shell.is-slot-compact::after,
+      [data-theme="light"] .slot-inline-top.is-slot-compact::after {
         color: rgba(50, 75, 104, 0.9);
       }
 
-      .adwork-hero-slot.is-ad-hidden::before,
-      .scheme-inline-ad-top.is-ad-hidden::before,
-      .adwork-hero-slot.is-ad-soft-hidden::before,
-      .scheme-inline-ad-top.is-ad-soft-hidden::before {
+      .slot-hero-shell.is-slot-hidden::before,
+      .slot-inline-top.is-slot-hidden::before,
+      .slot-hero-shell.is-slot-compact::before,
+      .slot-inline-top.is-slot-compact::before {
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.04em;
@@ -219,49 +219,49 @@
         text-shadow: none;
       }
 
-      .adwork-hero-slot.is-ad-hidden::after,
-      .scheme-inline-ad-top.is-ad-hidden::after,
-      .adwork-hero-slot.is-ad-soft-hidden::after,
-      .scheme-inline-ad-top.is-ad-soft-hidden::after {
+      .slot-hero-shell.is-slot-hidden::after,
+      .slot-inline-top.is-slot-hidden::after,
+      .slot-hero-shell.is-slot-compact::after,
+      .slot-inline-top.is-slot-compact::after {
         font-size: 10px;
         color: rgba(200, 213, 228, 0.62);
       }
 
-      [data-theme="light"] .adwork-hero-slot.is-ad-hidden::before,
-      [data-theme="light"] .scheme-inline-ad-top.is-ad-hidden::before,
-      [data-theme="light"] .adwork-hero-slot.is-ad-soft-hidden::before,
-      [data-theme="light"] .scheme-inline-ad-top.is-ad-soft-hidden::before {
+      [data-theme="light"] .slot-hero-shell.is-slot-hidden::before,
+      [data-theme="light"] .slot-inline-top.is-slot-hidden::before,
+      [data-theme="light"] .slot-hero-shell.is-slot-compact::before,
+      [data-theme="light"] .slot-inline-top.is-slot-compact::before {
         color: rgba(58, 82, 110, 0.78);
         border: none;
         background: transparent;
       }
 
-      [data-theme="light"] .adwork-hero-slot.is-ad-hidden::after,
-      [data-theme="light"] .scheme-inline-ad-top.is-ad-hidden::after,
-      [data-theme="light"] .adwork-hero-slot.is-ad-soft-hidden::after,
-      [data-theme="light"] .scheme-inline-ad-top.is-ad-soft-hidden::after {
+      [data-theme="light"] .slot-hero-shell.is-slot-hidden::after,
+      [data-theme="light"] .slot-inline-top.is-slot-hidden::after,
+      [data-theme="light"] .slot-hero-shell.is-slot-compact::after,
+      [data-theme="light"] .slot-inline-top.is-slot-compact::after {
         color: rgba(72, 98, 128, 0.66);
       }
 
       @media (max-width: 640px) {
-        .scheme-inline-ad-card {
+        .slot-inline-card {
           min-height: 120px;
           padding: 8px;
         }
 
-        .adwork-hero-slot {
+        .slot-hero-shell {
           min-height: 84px;
           padding: 3px 5px;
         }
 
-        .ad-close-button {
+        .slot-close-button {
           width: 26px;
           height: 26px;
           top: 5px;
           right: 5px;
         }
 
-        .ad-preview-banner {
+        .slot-preview-banner {
           min-height: 76px;
           font-size: 11px;
         }
@@ -790,4 +790,5 @@
       html.low-gpu .weapon-item.is-selected {
         background: rgba(12, 14, 18, 0.92) !important;
       }
+
 

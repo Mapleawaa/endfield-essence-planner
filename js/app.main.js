@@ -173,6 +173,20 @@
   };
 
   const modules = window.AppModules || {};
+  const appTemplates =
+    typeof window !== "undefined" && window.__APP_TEMPLATES ? window.__APP_TEMPLATES : {};
+  const templateMainParts =
+    typeof window !== "undefined" && Array.isArray(window.__APP_TEMPLATE_MAIN_PARTS)
+      ? window.__APP_TEMPLATE_MAIN_PARTS
+      : [];
+  const directMainTemplate =
+    typeof appTemplates.main === "string" && appTemplates.main.trim() ? appTemplates.main : "";
+  const mainAppTemplate = (directMainTemplate || templateMainParts.join("\n") || "<div></div>").trim();
+  const planConfigTemplate =
+    typeof appTemplates.planConfigControl === "string" && appTemplates.planConfigControl.trim()
+      ? appTemplates.planConfigControl.trim()
+      : "<div></div>";
+
   const planConfigControl = {
     props: {
       t: { type: Function, required: true },
@@ -183,10 +197,11 @@
       tPlanPriorityModeOptions: { type: Array, required: true },
     },
     emits: ["toggle"],
-    template: "#plan-config-control-template",
+    template: planConfigTemplate,
   };
 
   const app = createApp({
+    template: mainAppTemplate,
     setup() {
       const ctx = { ref, computed, onMounted, onBeforeUnmount, watch, nextTick };
       const state = {};

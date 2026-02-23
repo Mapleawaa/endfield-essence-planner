@@ -1,0 +1,746 @@
+(function () {
+  window.__APP_TEMPLATE_MAIN_PARTS = window.__APP_TEMPLATE_MAIN_PARTS || [];
+  window.__APP_TEMPLATE_MAIN_PARTS.push(`
+                              {{ idx === 0 ? t("优先推荐") : t("可替代") }}
+                            </span>
+                          </div>
+                        </div>
+                        <div class="gear-row-main">
+                          <div class="gear-cell gear-weapon">
+                            <div class="gear-items">
+                              <div v-for="(weapon, wIdx) in row.weapons" :key="wIdx" class="gear-item">
+                                <div
+                                  class="gear-icon-frame"
+                                  :class="weapon.rarity === 6 ? 'weapon-rarity-6' : weapon.rarity === 5 ? 'weapon-rarity-5' : weapon.rarity === 4 ? 'weapon-rarity-4' : ''"
+                                >
+                                  <img v-if="weapon.icon" v-lazy-src="weapon.icon" class="gear-icon" alt="" />
+                                </div>
+                                <div class="gear-text">
+                                  <div class="gear-name">{{ weapon.name }}</div>
+                                  <div class="gear-note" v-if="weapon.note">{{ weapon.note }}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div v-for="(equip, eIdx) in row.equipment" :key="eIdx" class="gear-cell">
+                            <div v-if="equip" class="gear-item">
+                              <div
+                                class="gear-icon-frame"
+                                :class="equip.rarity === 5 ? 'gear-rarity-5' : equip.rarity === 4 ? 'gear-rarity-4' : ''"
+                              >
+                                <img v-if="equip.icon" v-lazy-src="equip.icon" class="gear-icon" alt="" />
+                              </div>
+                              <div class="gear-text">
+                                <div class="gear-name">{{ equip.name }}</div>
+                                <div class="gear-note" v-if="equip.note">{{ equip.note }}</div>
+                              </div>
+                            </div>
+                            <div v-else class="gear-empty">-</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="gear-empty" v-else>{{ t("暂无配装") }}</div>
+                  </div>
+                </div>
+
+                <div v-show="strategyCategory === 'guide' && strategyTab === 'team'" class="detail-panel">
+                  <div class="detail-section">
+                    <h3>{{ t("配队思路") }}</h3>
+                    <p class="strategy-text">{{ (currentGuide && currentGuide.teamTips) || t("暂无建议") }}</p>
+                  </div>
+
+                  <div class="detail-section">
+                    <h3>{{ t("队伍推荐") }}</h3>
+                    <div class="team-table" v-if="teamSlots.length">
+                      <div v-for="(slot, sIdx) in teamSlots" :key="'team-slot-' + sIdx" class="team-cell">
+                        <div v-if="slot" class="team-slot">
+                          <div
+                            v-for="(entry, eIdx) in (slot.options || [])"
+                            :key="'team-entry-' + sIdx + '-' + eIdx"
+                            class="team-card"
+                            :class="{
+                              'is-alt': eIdx > 0,
+                              'is-self': currentCharacter && entry.name === currentCharacter.name,
+                            }"
+                          >
+                            <div class="team-name-row">
+                              <img v-if="entry.avatar" v-lazy-src="entry.avatar" class="team-member-avatar" alt="" loading="lazy" />
+                              <div class="team-name">{{ entry.name }}</div>
+                              <span
+                                v-if="currentCharacter && entry.name === currentCharacter.name"
+                                class="team-badge"
+                              >
+                                {{ t("当前") }}
+                              </span>
+                              <span v-if="entry.tag" class="team-badge muted">{{ entry.tag }}</span>
+                            </div>
+                            <div class="team-section">
+                              <span class="team-label">{{ t("武器") }}</span>
+                              <div class="team-items">
+                                <div v-for="(weapon, wIdx) in (entry.weapons || [])" :key="wIdx" class="team-item">
+                                  <div
+                                    class="team-icon-frame"
+                                    :class="weapon.rarity === 6 ? 'weapon-rarity-6' : weapon.rarity === 5 ? 'weapon-rarity-5' : weapon.rarity === 4 ? 'weapon-rarity-4' : ''"
+                                  >
+                                    <img v-if="weapon.icon" v-lazy-src="weapon.icon" class="team-icon" alt="" />
+                                  </div>
+                                  <div class="team-text">
+                                    <div class="team-item-name">{{ weapon.name }}</div>
+                                    <div class="team-note" v-if="weapon.note">{{ weapon.note }}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="team-section">
+                              <span class="team-label">{{ t("装备") }}</span>
+                              <div class="team-items">
+                                <div v-for="(equip, eIdx) in (entry.equipment || [])" :key="eIdx" class="team-item">
+                                  <div
+                                    class="team-icon-frame"
+                                    :class="equip.rarity === 5 ? 'gear-rarity-5' : equip.rarity === 4 ? 'gear-rarity-4' : ''"
+                                  >
+                                    <img v-if="equip.icon" v-lazy-src="equip.icon" class="team-icon" alt="" />
+                                  </div>
+                                  <div class="team-text">
+                                    <div class="team-item-name">{{ equip.name }}</div>
+                                    <div class="team-note" v-if="equip.note">{{ equip.note }}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div v-else class="team-empty">-</div>
+                      </div>
+                    </div>
+                    <div class="empty-guide" v-else>
+                      <p class="empty-guide-text">{{ t("暂无推荐") }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-show="strategyCategory === 'guide' && strategyTab === 'operation'" class="detail-panel">
+                  <div class="detail-section">
+                    <h3>{{ t("手法教学") }}</h3>
+                    <p class="strategy-text">{{ (currentGuide && (currentGuide.operationTips || currentGuide.skillTips)) || t("暂无建议") }}</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+              </div>
+            </transition>
+          </div>
+
+          <div v-else-if="currentView === 'match'" key="match" class="view-shell match-view">
+            <div class="mobile-tabs">
+              <button
+                class="mobile-tab"
+                :class="{ active: matchMobilePanel === 'source' }"
+                @click="matchMobilePanel = 'source'"
+              >
+                {{ t("武器选择") }} <span class="count">{{ matchSourceList.length }}</span>
+              </button>
+              <button
+                class="mobile-tab"
+                :class="{ active: matchMobilePanel === 'result' }"
+                @click="matchMobilePanel = 'result'"
+              >
+                {{ t("词条对照") }} <span class="count">{{ matchResults.length }}</span>
+              </button>
+            </div>
+            <div class="mobile-hint">
+              {{ t("手机端可通过上方标签切换“武器选择 / 词条对照”，并可下滑继续浏览列表。") }}
+            </div>
+            <div class="match-grid">
+              <section class="panel match-panel" :class="{ 'panel-hidden': matchMobilePanel !== 'source' }">
+                <div class="panel-title">
+                  <h2>{{ t("武器选择") }}</h2>
+                </div>
+                <div class="search-box match-search">
+                  <span>🔍</span>
+                  <input v-model="matchQuery" :placeholder="t('搜索武器...')" />
+                </div>
+                <div class="weapon-list match-weapon-grid match-source-grid">
+                  <button
+                    v-for="weapon in matchSourceList"
+                    :key="weapon.name"
+                    type="button"
+                    class="weapon-item match-weapon-item"
+                    :class="{
+                      'is-selected': matchSourceName === weapon.name,
+                      'rarity-6': weapon.rarity === 6,
+                      'rarity-5': weapon.rarity === 5,
+                      'rarity-4': weapon.rarity === 4,
+                    }"
+                    @click="selectMatchSource(weapon)"
+                  >
+                    <div class="weapon-art">
+                      <img
+                        v-if="hasImage(weapon)"
+                        class="weapon-figure"
+                        v-lazy-src="weaponImageSrc(weapon)"
+                        :alt="weapon.name"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <span v-else class="weapon-fallback-large">{{ weapon.rarity }}★</span>
+                    </div>
+                    <div v-if="weaponCharacters(weapon).length" class="weapon-avatars">
+                      <img
+                        v-for="(character, index) in weaponCharacters(weapon)"
+                        :key="\`\${weapon.name}-match-character-\${index}\`"
+                        class="weapon-avatar"
+                        v-lazy-src="characterImageSrc(character)"
+                        :alt="tTerm('character', character)"
+                        loading="lazy"
+                        decoding="async"
+                        @error="handleCharacterImageError"
+                      />
+                    </div>
+                    <div class="weapon-band"></div>
+                    <div class="weapon-name">
+                      <div class="weapon-title">{{ tTerm("weapon", weapon.name) }}</div>
+                    </div>
+                  </button>
+                </div>
+              </section>
+              <section class="panel match-panel" :class="{ 'panel-hidden': matchMobilePanel !== 'result' }">
+                <div class="panel-title">
+                  <h2>{{ t("词条对照") }}</h2>
+                </div>
+                <div class="match-info">
+                  <div class="match-info-title">{{ t("功能说明") }}</div>
+                  <p class="match-info-text">
+                    {{
+                      t(
+                        "用于查找与目标武器相同词条的其他武器，帮助完成“终极武器奖章”的镀层条件（RANK 需要达到 25），可借助低星同词条武器提升潜能并补足第三词条等级。"
+                      )
+                    }}
+                  </p>
+                </div>
+                <div v-if="!matchSourceWeapon" class="empty-state match-empty">
+                  <h2>{{ t("请选择一把武器") }}</h2>
+                </div>
+                <div v-else class="match-result">
+                  <div class="match-selection">
+                    <div class="match-selection-label">{{ t("已选武器") }}</div>
+                    <div class="match-selection-card">
+                      <div
+                        class="weapon-item match-weapon-item match-selected-card is-selected"
+                        :class="{
+                          'rarity-6': matchSourceWeapon.rarity === 6,
+                          'rarity-5': matchSourceWeapon.rarity === 5,
+                          'rarity-4': matchSourceWeapon.rarity === 4,
+                        }"
+                      >
+                        <div class="weapon-art">
+                          <img
+                            v-if="hasImage(matchSourceWeapon)"
+                            class="weapon-figure"
+                            v-lazy-src="weaponImageSrc(matchSourceWeapon)"
+                            :alt="matchSourceWeapon.name"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <span v-else class="weapon-fallback-large">
+                            {{ matchSourceWeapon.rarity }}★
+                          </span>
+                        </div>
+                        <div
+                          v-if="weaponCharacters(matchSourceWeapon).length"
+                          class="weapon-avatars"
+                        >
+                          <img
+                            v-for="(character, index) in weaponCharacters(matchSourceWeapon)"
+                            :key="\`\${matchSourceWeapon.name}-match-selected-\${index}\`"
+                            class="weapon-avatar"
+                            v-lazy-src="characterImageSrc(character)"
+                            :alt="tTerm('character', character)"
+                            loading="lazy"
+                            decoding="async"
+                            @error="handleCharacterImageError"
+                          />
+                        </div>
+                        <div class="weapon-band"></div>
+                        <div class="weapon-name">
+                          <div class="weapon-title">
+                            {{ tTerm("weapon", matchSourceWeapon.name) }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="scheme-weapon-attrs match-selection-attrs">
+                        <span class="attr-value attr-type">{{ t(matchSourceWeapon.type) }}</span>
+                        <span class="attr-value">{{ formatS1(matchSourceWeapon.s1) }}</span>
+                        <span class="attr-value">{{ t(matchSourceWeapon.s2) }}</span>
+                        <span class="attr-value">{{ t(matchSourceWeapon.s3) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="match-result-header">
+                    <div class="match-result-title">{{ t("相同词条的武器") }}</div>
+                    <div class="match-result-count">{{ matchResults.length }}</div>
+                  </div>
+                  <div v-if="!matchResults.length" class="match-empty">
+                    {{ t("暂无匹配的武器") }}
+                  </div>
+                  <div v-else class="weapon-list match-weapon-grid match-result-grid">
+                    <div
+                      v-for="weapon in matchResults"
+                      :key="weapon.name"
+                      class="weapon-item match-weapon-item"
+                      :class="{
+                        'rarity-6': weapon.rarity === 6,
+                        'rarity-5': weapon.rarity === 5,
+                        'rarity-4': weapon.rarity === 4,
+                      }"
+                    >
+                      <div class="weapon-art">
+                        <img
+                          v-if="hasImage(weapon)"
+                          class="weapon-figure"
+                          v-lazy-src="weaponImageSrc(weapon)"
+                          :alt="weapon.name"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <span v-else class="weapon-fallback-large">{{ weapon.rarity }}★</span>
+                      </div>
+                      <div v-if="weaponCharacters(weapon).length" class="weapon-avatars">
+                        <img
+                          v-for="(character, index) in weaponCharacters(weapon)"
+                          :key="\`\${weapon.name}-match-result-\${index}\`"
+                          class="weapon-avatar"
+                          v-lazy-src="characterImageSrc(character)"
+                          :alt="tTerm('character', character)"
+                          loading="lazy"
+                          decoding="async"
+                          @error="handleCharacterImageError"
+                        />
+                      </div>
+                      <div class="weapon-band"></div>
+                      <div class="weapon-name">
+                        <div class="weapon-title">{{ tTerm("weapon", weapon.name) }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+          <div v-else key="reforging" class="view-shell reforging-view">
+          <div class="empty-state">
+            <h2>{{ t("装备精锻") }}</h2>
+            <p>{{ t("功能开发中，敬请期待...") }}</p>
+          </div>
+          </div>
+        </transition>
+      </main>
+
+      <footer class="site-footer" aria-label="footer">
+        <div class="site-footer-inner">
+          <span class="footer-item">
+            <span class="footer-label">{{ t("版权所有") }}</span>
+            <span class="footer-value">© 2026 璨梦踏月</span>
+          </span>
+          <span class="footer-sep">·</span>
+          <span class="footer-item">
+            <span class="footer-label">{{ t("许可证") }}</span>
+            <a
+              class="footer-link"
+              href="https://www.gnu.org/licenses/agpl-3.0.html"
+              target="_blank"
+              rel="noreferrer"
+            >
+              AGPL-3.0
+            </a>
+          </span>
+          <span class="footer-sep">·</span>
+          <span class="footer-item">
+            <span class="footer-label">{{ t("源码") }}</span>
+            <a
+              class="footer-link"
+              href="https://github.com/cmyyx/endfield-essence-planner"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>
+          </span>
+          <span class="footer-sep">·</span>
+          <span class="footer-item">
+            <span class="footer-label">{{ t("联系") }}</span>
+            <a class="footer-link" href="mailto:contact@canmoe.com">
+              contact@canmoe.com
+            </a>
+          </span>
+          <span class="footer-item footer-item-disclaimer">
+            <span class="footer-label">{{ t("素材声明") }}</span>
+            <span class="footer-value footer-disclaimer-text">
+              {{
+                t(
+                  "当前图片素材均来源于上海鹰角网络科技有限公司及其游戏《明日方舟：终末地》，相关版权归原权利方所有。本工具仅供玩家交流与辅助规划使用。"
+                )
+              }}
+            </span>
+          </span>
+        </div>
+      </footer>
+
+      <button
+        class="back-to-top"
+        :class="{ 'is-visible': showBackToTop }"
+        :title="t('回到顶部')"
+        :aria-label="t('回到顶部')"
+        @click="scrollToTop"
+      >
+        ↑
+      </button>
+
+      <transition name="fade-scale">
+        <div v-if="showNotice" class="about-overlay notice-overlay" @click.self="closeNotice">
+          <div v-if="contentLoading" class="about-card notice-card">{{ t("内容加载中...") }}</div>
+          <div v-else class="about-card notice-card">
+            <h3>{{ announcement.title }}</h3>
+            <div class="notice-body">
+              <p class="notice-meta">
+                {{ t("更新日期：{date}", { date: announcement.date }) }}
+              </p>
+              <ul class="notice-list">
+                <li
+                  v-for="(item, index) in announcement.items"
+                  :key="\`\${item}-\${index}\`"
+                  v-html="formatNoticeItem(item)"
+                ></li>
+              </ul>
+            </div>
+            <div class="notice-footer">
+              <div class="notice-qq" v-if="announcement.qqGroup">
+                <a
+                  class="ghost-button notice-join"
+                  href="https://qm.qq.com/q/FBNLBtEPy8"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {{ t("加入 QQ 群") }}
+                </a>
+                <div class="notice-qq-info">
+                  {{ t("QQ 群：{group}", { group: announcement.qqGroup }) }}
+                  <span v-if="announcement.qqNote">（{{ announcement.qqNote }}）</span>
+                </div>
+              </div>
+              <label class="notice-skip">
+                <input type="checkbox" v-model="skipNotice" />
+                {{ t("本次公告不再显示") }}
+              </label>
+              <div class="about-actions">
+                <button class="ghost-button" @click="closeNotice">{{ t("关闭") }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <transition name="fade-scale">
+        <div
+          v-if="showChangelog"
+          class="about-overlay changelog-overlay"
+          @click.self="showChangelog = false"
+        >
+          <div v-if="contentLoading" class="about-card notice-card">{{ t("内容加载中...") }}</div>
+          <div v-else class="about-card changelog-card">
+            <h3>{{ changelog.title }}</h3>
+            <div class="changelog-body">
+              <div v-if="!changelog.entries || !changelog.entries.length" class="empty">
+                {{ t("暂无更新日志。") }}
+              </div>
+              <div
+                v-else
+                v-for="(entry, index) in changelog.entries"
+                :key="entry.date || \`changelog-\${index}\`"
+                class="changelog-section"
+              >
+                <div class="changelog-date">{{ entry.date }}</div>
+                <ul class="changelog-list">
+                  <li v-for="item in entry.items" :key="item">{{ item }}</li>
+                </ul>
+              </div>
+            </div>
+            <div class="about-actions">
+              <button class="ghost-button" @click="showChangelog = false">{{ t("关闭") }}</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <transition name="fade-scale">
+                <div v-if="showAbout" class="about-overlay about-overlay-main" @click.self="showAbout = false">
+                  <div v-if="contentLoading" class="about-card notice-card">{{ t("内容加载中...") }}</div>
+                  <div v-else class="about-card about-main">
+                    <h3>{{ aboutContent.title }}</h3>
+                    <div class="about-body">
+              <p v-for="(line, index) in aboutContent.paragraphs" :key="\`about-line-\${index}\`">
+                {{ line }}
+              </p>
+                      <p v-if="aboutContent.author">
+                        {{ t("作者：{name}", { name: aboutContent.author }) }}
+                      </p>
+                      <div
+                        class="about-material-note"
+                        v-if="aboutContent.materialNotice || aboutContent.materialDisclaimer"
+                      >
+                        <h4>{{ t("素材说明与免责声明") }}</h4>
+                        <p v-if="aboutContent.materialNotice">{{ t(aboutContent.materialNotice) }}</p>
+                        <p v-if="aboutContent.materialDisclaimer" class="about-material-disclaimer">
+                          {{ t(aboutContent.materialDisclaimer) }}
+                        </p>
+                      </div>
+                      <div class="about-links" v-if="aboutContent.links && aboutContent.links.length">
+                <a
+                  v-for="link in aboutContent.links"
+                  :key="link.href || link.text"
+                  class="repo-link"
+                  :href="link.href"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span class="repo-chip">{{ link.chip }}</span>
+                  <span>{{ link.text }}</span>
+                  <span class="repo-arrow">↗</span>
+                </a>
+              </div>
+              <div class="about-thanks" v-if="aboutContent.thanks && aboutContent.thanks.length">
+                <h4>{{ t("感谢") }}</h4>
+                <ul class="about-thanks-list">
+                  <li
+                    v-for="(entry, index) in aboutContent.thanks"
+                    :key="entry.name || \`about-thanks-\${index}\`"
+                    class="about-thanks-item"
+                  >
+                    <div class="about-thanks-name">
+                      <a v-if="entry.href" :href="entry.href" target="_blank" rel="noreferrer">
+                        {{ entry.name }}
+                        <span class="about-thanks-arrow">↗</span>
+                      </a>
+                      <span v-else>{{ entry.name }}</span>
+                    </div>
+                    <div v-if="entry.note" class="about-thanks-note">{{ entry.note }}</div>
+                  </li>
+                </ul>
+              </div>
+              <div
+                class="about-sponsor"
+                v-if="aboutContent.sponsor && aboutContent.sponsor.items && aboutContent.sponsor.items.length"
+              >
+                <h4>{{ t(aboutContent.sponsor.title || "赞助支持") }}</h4>
+                <p v-if="aboutContent.sponsor.text" class="about-sponsor-text">
+                  {{ t(aboutContent.sponsor.text) }}
+                </p>
+              <div class="about-sponsor-grid">
+                <div
+                  v-for="(item, index) in aboutContent.sponsor.items"
+                  :key="item.label || item.src || \`about-sponsor-\${index}\`"
+                  class="about-sponsor-item"
+                >
+                  <img
+                    v-lazy-src="item.src"
+                    :alt="item.label ? t(item.label) : ''"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div v-if="item.label" class="about-sponsor-label">
+                    {{ t(item.label) }}
+                  </div>
+                </div>
+              </div>
+              <div
+                v-if="aboutContent.sponsor.list && aboutContent.sponsor.list.length"
+                class="about-sponsor-list"
+              >
+                <h5>{{ t("赞助列表") }}</h5>
+                <ul class="about-sponsor-list-items">
+                  <li
+                    v-for="(entry, index) in aboutContent.sponsor.list"
+                    :key="entry.name || \`about-sponsor-entry-\${index}\`"
+                    class="about-sponsor-entry"
+                  >
+                    <div class="about-sponsor-entry-name">{{ entry.name }}</div>
+                    <div
+                      v-if="entry.amount || entry.date"
+                      class="about-sponsor-entry-meta"
+                    >
+                      <span v-if="entry.amount" class="about-sponsor-entry-amount">
+                        {{ entry.amount }}
+                      </span>
+                      <span v-if="entry.date" class="about-sponsor-entry-date">
+                        {{ entry.date }}
+                      </span>
+                    </div>
+                    <div v-if="entry.note" class="about-sponsor-entry-note">
+                      {{ entry.note }}
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            </div>
+
+            <div class="about-actions">
+              <button class="ghost-button" @click="showAbout = false">{{ t("关闭") }}</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <transition name="fade-scale">
+          <div v-if="tutorialActive" class="tutorial-float">
+          <div class="tutorial-card">
+            <div class="tutorial-head-row">
+              <div class="tutorial-step">
+                {{ t("新手教程 {current} / {total}", {
+                  current: tutorialStepIndex + 1,
+                  total: tutorialTotalSteps,
+                }) }}
+              </div>
+              <button
+                v-if="tutorialBodyCanCollapse"
+                class="ghost-button tutorial-collapse"
+                :class="{ 'tutorial-highlight': tutorialCollapseHighlight }"
+                @click="toggleTutorialBody"
+              >
+                {{ tutorialBodyCollapsed ? t("展开说明") : t("收起说明") }}
+              </button>
+            </div>
+            <h3>{{ tutorialStep.title }}</h3>
+            <p
+              v-for="(line, index) in tutorialVisibleLines"
+              :key="\`tutorial-line-\${index}\`"
+              :class="{
+                'tutorial-line-cut':
+                  tutorialBodyCollapsed &&
+                  isPortrait &&
+                  index === tutorialVisibleLines.length - 1
+              }"
+            >
+              {{ line }}
+            </p>
+            <div class="tutorial-status">
+              <span v-if="tutorialStepReady">{{ t("已完成，可继续。") }}</span>
+              <span v-else>{{ t("请按提示完成当前操作。") }}</span>
+            </div>
+            <div class="tutorial-actions">
+              <button
+                class="ghost-button"
+                @click="prevTutorialStep"
+                :disabled="tutorialStepIndex === 0"
+              >
+                {{ t("上一步") }}
+              </button>
+              <button class="ghost-button" @click="openTutorialSkipConfirm">
+                {{ t("跳过全部") }}
+              </button>
+              <button
+                v-if="tutorialStepKey === 'base-pick' && !tutorialStepReady"
+                class="ghost-button"
+                @click="skipTutorialStep"
+              >
+                {{ t("跳过本步") }}
+              </button>
+              <button
+                class="about-button"
+                @click="nextTutorialStep"
+                :disabled="!tutorialStepReady"
+              >
+                {{
+                  tutorialStepIndex + 1 >= tutorialTotalSteps
+                    ? t("完成")
+                    : t("下一步")
+                }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <transition name="fade-scale">
+        <div v-if="showTutorialSkipConfirm" class="about-overlay" @click.self="closeTutorialSkipConfirm">
+          <div class="about-card tutorial-modal">
+            <h3>{{ t("跳过新手教程？") }}</h3>
+            <p>{{ t("确定跳过当前版本的新手教程吗？此操作仅对当前版本生效。") }}</p>
+            <p class="tutorial-note">{{ t("之后可在“更多设置”中再次体验。") }}</p>
+            <div class="about-actions">
+              <button class="ghost-button" @click="closeTutorialSkipConfirm">{{ t("取消") }}</button>
+              <button class="about-button" @click="confirmTutorialSkipAll">
+                {{ t("跳过全部") }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <transition name="fade-scale">
+        <div v-if="showTutorialComplete" class="tutorial-float">
+          <div class="tutorial-card tutorial-complete-card">
+            <div class="tutorial-step">{{ t("新手教程完成") }}</div>
+            <h3>{{ t("恭喜完成新手教程") }}</h3>
+            <p>{{ t("你已完成当前版本的新手教程。") }}</p>
+            <p>{{ t("如果你认为新手教程需要改进欢迎提供建议。") }}</p>
+            <p class="tutorial-note">{{ t("可在“更多设置”中再次体验。") }}</p>
+            <div class="tutorial-actions">
+              <button class="about-button" @click="closeTutorialComplete">{{ t("知道了") }}</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <div v-if="showDomainWarning" class="domain-overlay">
+        <div class="domain-card">
+          <h3>{{ t("非官方域名提示") }}</h3>
+          <p>
+            {{ t("当前访问域名并非") }}
+            <a class="domain-link" href="https://end.canmoe.com" target="_blank" rel="noreferrer">
+              end.canmoe.com
+            </a>
+            {{ t("请确认是否为可信来源，谨防恶意映射或页面被内嵌篡改。") }}
+          </p>
+          <p class="domain-chip">{{ t("当前页面域名：{host}", { host: currentHost }) }}</p>
+          <p v-if="isEmbedded" class="domain-chip">
+            {{ t("上层页面域名：{host}", { host: embedHostLabel }) }}
+          </p>
+          <p v-if="isEmbedded && !isEmbedTrusted">{{ t("该域名未在内嵌白名单内。") }}</p>
+          <p v-if="isEmbedded">{{ t("检测到页面被内嵌（iframe）打开，此提示无法关闭。") }}</p>
+          <div class="about-actions domain-actions">
+            <a
+              class="repo-link domain-primary"
+              href="https://end.canmoe.com"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span class="repo-chip">OFFICIAL</span>
+              <span>{{ t("访问官方域名") }}</span>
+              <span class="repo-arrow">↗</span>
+            </a>
+            <button
+              v-if="!isEmbedded"
+              class="ghost-button"
+              :disabled="warningCountdown > 0"
+              @click="dismissDomainWarning"
+            >
+              {{
+                warningCountdown > 0
+                  ? t("我已知晓（{count}s）", { count: warningCountdown })
+                  : t("我已知晓")
+              }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <footer v-if="showIcpFooter" class="icp-footer">
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+          {{ icpNumber }}
+        </a>
+      </footer>
+`);
+})();

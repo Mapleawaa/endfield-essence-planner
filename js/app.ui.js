@@ -18,7 +18,7 @@
     const root = typeof document !== "undefined" ? document.documentElement : null;
 
     const allowedAdHosts = new Set(["end.canmoe.com", "127.0.0.1", "localhost"]);
-    const adworkScriptSrc = "https://cdn.adwork.net/js/makemoney.js";
+    const providerScriptSrc = "https://cdn.adwork.net/js/makemoney.js";
     const adMobileBreakpoint = 960;
     const adPreviewParamKey = "adPreview";
     const adPreviewMode = state.adPreviewMode || ref(false);
@@ -64,7 +64,7 @@
         canShowAds.value = true;
         return;
       }
-      if (window.__adworkScriptError) {
+      if (window.__slotProviderScriptError) {
         canShowAds.value = false;
         return;
       }
@@ -84,10 +84,10 @@
       if (adPreviewMode.value) {
         return Promise.resolve(false);
       }
-      if (!canShowAds.value || window.__adworkScriptError) {
+      if (!canShowAds.value || window.__slotProviderScriptError) {
         return Promise.resolve(false);
       }
-      if (window.__adworkScriptReady) {
+      if (window.__slotProviderScriptReady) {
         return Promise.resolve(true);
       }
       if (adScriptLoadingPromise) {
@@ -95,10 +95,10 @@
       }
       const loadTask =
         typeof loadScriptOnce === "function"
-          ? loadScriptOnce(adworkScriptSrc)
+          ? loadScriptOnce(providerScriptSrc)
           : new Promise((resolve, reject) => {
               const script = document.createElement("script");
-              script.src = adworkScriptSrc;
+              script.src = providerScriptSrc;
               script.async = true;
               script.onload = resolve;
               script.onerror = reject;
@@ -106,14 +106,14 @@
             });
       adScriptLoadingPromise = loadTask
         .then(() => {
-          window.__adworkScriptReady = true;
+          window.__slotProviderScriptReady = true;
           scheduleAdSlotVisibility();
           primeAdSlotVisibility();
           return true;
         })
         .catch(() => {
-          window.__adworkScriptError = true;
-          window.dispatchEvent(new Event("adwork:failed"));
+          window.__slotProviderScriptError = true;
+          window.dispatchEvent(new Event("slotfeed:failed"));
           return false;
         })
         .finally(() => {
@@ -122,7 +122,7 @@
       return adScriptLoadingPromise;
     };
 
-    const adSlotSelector = ".adwork-hero-slot, .scheme-inline-ad-top";
+    const adSlotSelector = ".slot-hero-shell, .slot-inline-top";
     let adSlotVisibilityRaf = null;
     let adSlotVisibilityTimers = [];
 
@@ -157,9 +157,7 @@
       }
       const className = (node.className || "").toString().toLowerCase();
       if (
-        className.includes("placeholder") ||
-        className.includes("ad-placeholder") ||
-        className.includes("adwork-placeholder")
+          className.includes("placeholder")
       ) {
         return true;
       }
@@ -189,11 +187,11 @@
       const slots = document.querySelectorAll(adSlotSelector);
       slots.forEach((slot) => {
         if (adPreviewMode.value && !adDismissedSession.value) {
-          slot.classList.remove("is-ad-hidden");
-          slot.classList.remove("is-ad-soft-hidden");
+          slot.classList.remove("is-slot-hidden");
+          slot.classList.remove("is-slot-compact");
           return;
         }
-        const container = slot.querySelector(".adwork-net");
+        const container = slot.querySelector(".slot-provider-net");
         const hasContainer = container instanceof HTMLElement;
         const richNodes =
           hasContainer
@@ -218,8 +216,8 @@
         const hasRenderable = hasRichRenderable || (hasMeaningfulChildren && hasContainerRenderable);
         const shouldHardHide = !canShowAds.value || !hasContainer || placeholderLike;
         const shouldSoftHide = !shouldHardHide && !hasRenderable;
-        slot.classList.toggle("is-ad-hidden", shouldHardHide);
-        slot.classList.toggle("is-ad-soft-hidden", shouldSoftHide);
+        slot.classList.toggle("is-slot-hidden", shouldHardHide);
+        slot.classList.toggle("is-slot-compact", shouldSoftHide);
       });
     };
 
@@ -484,7 +482,7 @@
         updateBackToTopVisibility();
         window.addEventListener("scroll", handleBackToTopScroll, { passive: true });
         evaluateAdVisibility();
-        window.addEventListener("adwork:failed", handleAdFailed);
+        window.addEventListener("slotfeed:failed", handleAdFailed);
         window.addEventListener("resize", scheduleAdSlotVisibility);
         if (canShowAds.value) {
           if (typeof nextTick === "function") {
@@ -532,7 +530,7 @@
       }
       if (typeof window !== "undefined") {
         window.removeEventListener("scroll", handleBackToTopScroll);
-        window.removeEventListener("adwork:failed", handleAdFailed);
+        window.removeEventListener("slotfeed:failed", handleAdFailed);
         window.removeEventListener("resize", scheduleAdSlotVisibility);
       }
       if (adSlotVisibilityRaf) {
@@ -554,3 +552,4 @@
     state.enableAdPreview = enableAdPreview;
   };
 })();
+

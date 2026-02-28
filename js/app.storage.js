@@ -200,6 +200,42 @@
       return `${text.slice(0, maxLength)} ...(truncated, total ${text.length})`;
     };
 
+    const escapeJsonString = (value) => {
+      const text = String(value == null ? "" : value);
+      return text.replace(/[\u0000-\u001f"\\]/g, (char) => {
+        if (char === '"') return '\\"';
+        if (char === "\\") return "\\\\";
+        if (char === "\b") return "\\b";
+        if (char === "\f") return "\\f";
+        if (char === "\n") return "\\n";
+        if (char === "\r") return "\\r";
+        if (char === "\t") return "\\t";
+        const code = char.charCodeAt(0).toString(16).padStart(4, "0");
+        return `\\u${code}`;
+      });
+    };
+
+    const serializeWeaponMarksNormalized = (normalizedMap) => {
+      const source = normalizedMap && typeof normalizedMap === "object" ? normalizedMap : {};
+      const names = Object.keys(source);
+      if (!names.length) return "{}";
+      const items = [];
+      names.forEach((name) => {
+        if (!name) return;
+        const entry = source[name];
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) return;
+        const fields = [];
+        if (entry.weaponOwned === true) fields.push('"weaponOwned":true');
+        if (entry.essenceOwned === true) fields.push('"essenceOwned":true');
+        if (typeof entry.note === "string" && entry.note) {
+          fields.push(`"note":"${escapeJsonString(entry.note)}"`);
+        }
+        if (!fields.length) return;
+        items.push(`"${escapeJsonString(name)}":{${fields.join(",")}}`);
+      });
+      return `{${items.join(",")}}`;
+    };
+
     const collectManagedStorageKeys = () => {
       const keys = [
         state.marksStorageKey,
@@ -321,8 +357,15 @@
       state.showStorageErrorModal.value = true;
     };
 
-    const writeJsonStorageWithVerify = (key, payload, meta) => {
-      const serialized = JSON.stringify(payload);
+    const writeJsonStorageWithVerify = (key, payload, meta, options) => {
+      let serialized = "";
+      if (options && typeof options.serialized === "string") {
+        serialized = options.serialized;
+      } else if (options && typeof options.serialize === "function") {
+        serialized = String(options.serialize(payload));
+      } else {
+        serialized = JSON.stringify(payload);
+      }
       localStorage.setItem(key, serialized);
       const readBack = localStorage.getItem(key);
       const readBackText = readBack == null ? "<null>" : String(readBack);
@@ -872,8 +915,11 @@
             localStorage.removeItem(state.marksStorageKey);
             return;
           }
+          const serializedMarks = serializeWeaponMarksNormalized(normalized);
           writeJsonStorageWithVerify(state.marksStorageKey, normalized, {
             scope: "persist-weapon-marks-verify",
+          }, {
+            serialized: serializedMarks,
           });
         } catch (error) {
           reportStorageIssue("storage.write", state.marksStorageKey, error, {

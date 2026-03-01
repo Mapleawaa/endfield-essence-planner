@@ -4,22 +4,54 @@
   modules.initEmbed = function initEmbed(ctx, state) {
     const { ref, onMounted, onBeforeUnmount } = ctx;
 
-    const normalizeHost = (value) => String(value || "").trim().toLowerCase();
+    const normalizeHost = (value) => String(value || "").trim().toLowerCase().replace(/\.+$/, "");
+    const toHostPattern = (value) => {
+      const raw = String(value || "").trim();
+      if (!raw) return "";
+      const wildcard = raw.startsWith("*.");
+      const base = wildcard ? raw.slice(2) : raw;
+      if (!base) return "";
+      try {
+        if (/^[a-z][a-z0-9+.-]*:\/\//i.test(base)) {
+          const hostname = normalizeHost(new URL(base).hostname);
+          return hostname ? (wildcard ? `*.${hostname}` : hostname) : "";
+        }
+      } catch (error) {
+        // ignore parse errors and fallback to raw host token
+      }
+      const hostToken = normalizeHost(base);
+      return hostToken ? (wildcard ? `*.${hostToken}` : hostToken) : "";
+    };
+    const hostMatchesPattern = (host, pattern) => {
+      if (!host || !pattern) return false;
+      if (pattern.startsWith("*.")) {
+        const base = pattern.slice(2);
+        return host === base || host.endsWith(`.${base}`);
+      }
+      return host === pattern;
+    };
     const readContent = () => {
+      if (typeof window !== "undefined" && window.CONTENT && typeof window.CONTENT === "object") {
+        return window.CONTENT;
+      }
       if (state.content && typeof state.content === "object" && "value" in state.content) {
         return state.content.value || window.CONTENT || {};
       }
       return state.content || window.CONTENT || {};
     };
-    const readEmbedAllowedHosts = () => {
+    const readHostPatterns = (key) => {
       const content = readContent();
-      const hosts = Array.isArray(content.embed?.allowedHosts) ? content.embed.allowedHosts : [];
-      return new Set(hosts.map(normalizeHost).filter(Boolean));
+      const hosts = Array.isArray(content.embed?.[key]) ? content.embed[key] : [];
+      return new Set(hosts.map(toHostPattern).filter(Boolean));
     };
+    const readEmbedAllowedHostPatterns = () => readHostPatterns("allowedHosts");
+    const readOfficialHostPatterns = () => readHostPatterns("officialHosts");
+    const readIcpHostPatterns = () => readHostPatterns("icpHosts");
+    const isHostMatchedByPatterns = (host, patterns) =>
+      host && patterns.size ? Array.from(patterns).some((pattern) => hostMatchesPattern(host, pattern)) : false;
 
     const currentHost = ref(normalizeHost(window.location.hostname));
     const isFileProtocol = window.location.protocol === "file:";
-    const allowedHosts = new Set(["end.canmoe.com", "127.0.0.1", "localhost"]);
     const officialSignalHeader = "x-endfield-essence-planner-official";
     let embedded = false;
     try {
@@ -31,16 +63,24 @@
     const embedHost = ref("");
     const embedHostLabel = ref("");
     const isEmbedTrusted = ref(false);
-    const isCurrentHostTrusted = allowedHosts.has(currentHost.value);
+    const isCurrentHostTrusted = ref(false);
+
+    const recomputeCurrentHostTrust = () => {
+      const patterns = readOfficialHostPatterns();
+      const host = normalizeHost(currentHost.value);
+      isCurrentHostTrusted.value = isHostMatchedByPatterns(host, patterns);
+    };
+
     const recomputeEmbedTrust = () => {
       if (!isEmbedded.value) {
         isEmbedTrusted.value = false;
         return;
       }
-      const embedAllowedHosts = readEmbedAllowedHosts();
+      const embedAllowedHostPatterns = readEmbedAllowedHostPatterns();
       const host = normalizeHost(embedHost.value);
-      isEmbedTrusted.value = host && embedAllowedHosts.size ? embedAllowedHosts.has(host) : false;
+      isEmbedTrusted.value = isHostMatchedByPatterns(host, embedAllowedHostPatterns);
     };
+
     if (isEmbedded.value) {
       let embedOrigin = "";
       if (window.location.ancestorOrigins && window.location.ancestorOrigins.length) {
@@ -62,8 +102,10 @@
         }
       }
       embedHostLabel.value = embedHost.value || state.t("未知来源");
-      recomputeEmbedTrust();
     }
+
+    recomputeCurrentHostTrust();
+    recomputeEmbedTrust();
 
     const isOfficialDeployment = ref(false);
     const showDomainWarning = ref(false);
@@ -83,8 +125,8 @@
         return;
       }
       const nextVisible = isEmbedded.value
-        ? !(isCurrentHostTrusted && isEmbedTrusted.value)
-        : !isCurrentHostTrusted;
+        ? !(isCurrentHostTrusted.value && isEmbedTrusted.value)
+        : !isCurrentHostTrusted.value;
       showDomainWarning.value = nextVisible;
       if (!nextVisible) {
         stopWarningCountdown();
@@ -131,9 +173,7 @@
       stopWarningCountdown();
     };
 
-    const showIcpFooter = ref(
-      false
-    );
+    const showIcpFooter = ref(false);
     const icpNumber = ref("苏ICP备2026000659号");
 
     onMounted(async () => {
@@ -144,6 +184,7 @@
           // ignore content prefetch errors and keep fallback behavior
         }
       }
+      recomputeCurrentHostTrust();
       recomputeEmbedTrust();
       isOfficialDeployment.value = await detectOfficialDeployment();
       recomputeDomainWarning();
@@ -151,8 +192,9 @@
         warningCountdown.value = 10;
         startWarningCountdown();
       }
+      const icpPatterns = readIcpHostPatterns();
       showIcpFooter.value =
-        isOfficialDeployment.value && currentHost.value === "end.canmoe.com" && !isEmbedded.value;
+        isOfficialDeployment.value && !isEmbedded.value && isHostMatchedByPatterns(currentHost.value, icpPatterns);
     });
 
     onBeforeUnmount(() => {

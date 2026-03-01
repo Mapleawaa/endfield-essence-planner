@@ -170,6 +170,8 @@ window.CONTENT = {
     },
   },
   embed: {
+    officialHosts: ["end.canmoe.com"],
     allowedHosts: ["elysium-stack.cn"],
+    icpHosts: ["end.canmoe.com"],
   },
 };

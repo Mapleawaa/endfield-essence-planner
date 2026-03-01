@@ -2,13 +2,13 @@ window.CONTENT = {
   announcement: {
     version: "1.5.0",
     title: "公告",
-    date: "2026-02-26",
+    date: "2026-03-01",
     qqGroup: "1045523485",
     qqNote: "反馈与建议交流",
     items: [
       "更新装备精锻界面(感谢[@Nether-Dream](https://github.com/Nether-Dream)和[@julystone](https://github.com/julystone)整理装备数据,数据未经严格校验,如有错误请反馈)",
       "如果你对本站使用的背景感兴趣,[点此通过网盘下载随机图中的背景](https://pan.quark.cn/s/27540d6f3706),感谢你的喜欢!",
-      "已修复在特定浏览器(点名==夸克浏览器==)无法保存标记状态,如仍存在问题请按报错框提示导出数据并通过Q群/GitHub向我反馈(不过我不知道你能不能看到该公告提示,因为报错框优先级高于公告)",
+      "角色攻略界面绝赞开发中",
     ],
   },
   changelog: {

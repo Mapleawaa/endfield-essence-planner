@@ -1223,6 +1223,22 @@
     var appEntryScript = activeBootResourceConfig.appEntryScript;
     var startupScripts = activeBootResourceConfig.startupScripts;
     var optionalScriptConfigs = activeBootResourceConfig.optionalScriptConfigs;
+    if (!optionalScriptConfigs || typeof optionalScriptConfigs !== "object") {
+      optionalScriptConfigs = {};
+    }
+    var analyticsBootstrapSrc = "./js/analytics.bootstrap.js";
+    if (!optionalScriptConfigs[analyticsBootstrapSrc]) {
+      optionalScriptConfigs[analyticsBootstrapSrc] = {
+        featureKey: "analytics",
+        retryDelayMs: 1200,
+        maxRetries: 1,
+      };
+    }
+    if (typeof optionalScriptConfigs[analyticsBootstrapSrc].validate !== "function") {
+      optionalScriptConfigs[analyticsBootstrapSrc].validate = function () {
+        return typeof window.__loadAnalyticsNow === "function";
+      };
+    }
     var resourceRuntime = null;
 
     var finish = function () {
@@ -1321,7 +1337,16 @@
     }
 
     var optionalReporter = optionalApi.createOptionalFailureReporter({ bt: bt });
-    var reportOptionalResourceFailure = optionalReporter.reportOptionalResourceFailure;
+    var reportOptionalResourceFailure = function (entry, reportOptions) {
+      if (entry && typeof entry === "object") {
+        var featureKey = String(entry.featureKey || "");
+        var src = String(entry.src || entry.label || entry.resource || "");
+        if (featureKey === "analytics" || src === analyticsBootstrapSrc) {
+          return null;
+        }
+      }
+      return optionalReporter.reportOptionalResourceFailure(entry, reportOptions);
+    };
     resourceRuntime = resourcesApiRuntime.createResourceRuntime({
       bt: bt,
       cssFiles: cssFiles,
@@ -1392,7 +1417,9 @@
         })
       );
     });
-    var optionalScripts = Object.keys(optionalScriptConfigs);
+    var optionalScripts = Object.keys(optionalScriptConfigs).filter(function (src) {
+      return src !== analyticsBootstrapSrc;
+    });
     var optionalScriptPromise = runtimePreludePromise.then(function () {
       return Promise.all(
         optionalScripts.map(function (src) {
@@ -1400,7 +1427,8 @@
         })
       );
     });
-    if (typeof window.__loadAnalyticsNow === "function") {
+    var triggerAnalyticsNow = function () {
+      if (typeof window.__loadAnalyticsNow !== "function") return;
       try {
         // Intentionally eager: capture real startup timing under first-screen contention.
         window.__loadAnalyticsNow();
@@ -1414,7 +1442,27 @@
           optionalSignature: "bootstrap.analytics-preload",
         });
       }
-    }
+    };
+    var analyticsBootstrapPromise = runtimePreludePromise.then(function () {
+      return loadOptionalScriptWithRetry(
+        analyticsBootstrapSrc,
+        optionalScriptConfigs[analyticsBootstrapSrc],
+        runId
+      );
+    });
+    analyticsBootstrapPromise.then(function () {
+      if (typeof window.__loadAnalyticsNow !== "function") {
+        reportNonFatalDiagnostic({
+          operation: "bootstrap.analytics-script",
+          kind: "analytics-bootstrap-load-failed",
+          resource: "./js/analytics.bootstrap.js",
+          errorName: "AnalyticsBootstrapUnavailable",
+          errorMessage: "analytics bootstrap load failed",
+          optionalSignature: "bootstrap.analytics-script",
+        });
+      }
+      triggerAnalyticsNow();
+    });
     var shellReadyPromise = new Promise(function (resolve) {
       var guard = 0;
       var check = function () {

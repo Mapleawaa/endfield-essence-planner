@@ -274,7 +274,9 @@
                     </div>
                     <div class="weapon-band"></div>
                     <div class="weapon-name">
-                      <div class="weapon-title">{{ tTerm("weapon", weapon.name) }}</div>
+                      <div class="weapon-title">
+                        <span class="weapon-title-text">{{ tTerm("weapon", weapon.name) }}</span>
+                      </div>
                       <match-status-line
                         :weapon-name="weapon.name"
                         :t="t"
@@ -348,7 +350,9 @@
                         <div class="weapon-band"></div>
                         <div class="weapon-name">
                           <div class="weapon-title">
-                            {{ tTerm("weapon", matchSourceWeapon.name) }}
+                            <span class="weapon-title-text">
+                              {{ tTerm("weapon", matchSourceWeapon.name) }}
+                            </span>
                           </div>
                           <div class="weapon-type-subtitle">
                             {{ tTerm("type", matchSourceWeapon.type) }}
@@ -411,7 +415,9 @@
                       </div>
                       <div class="weapon-band"></div>
                       <div class="weapon-name">
-                        <div class="weapon-title">{{ tTerm("weapon", weapon.name) }}</div>
+                        <div class="weapon-title">
+                          <span class="weapon-title-text">{{ tTerm("weapon", weapon.name) }}</span>
+                        </div>
                         <match-status-line
                           :weapon-name="weapon.name"
                           :t="t"
@@ -425,7 +431,28 @@
               </section>
             </div>
           </div>
+          </template>
           <div v-else key="equip-refining" class="view-shell planner-shell equip-refining-shell">
+            <div
+              v-if="isViewBundleLoading('equip-refining') || isViewBundleFailed('equip-refining')"
+              class="panel view-load-panel"
+            >
+              <div v-if="isViewBundleLoading('equip-refining')" class="empty-state view-load-state">
+                <h2>{{ t("error.view_loading_title") }}</h2>
+                <p>{{ t("error.view_loading_summary") }}</p>
+              </div>
+              <div v-else class="empty-state view-load-state">
+                <h2>{{ t("error.view_load_failed_title") }}</h2>
+                <p>{{ t("error.view_load_failed_summary") }}</p>
+          <button class="ghost-button" @click="retryViewLoad('equip-refining')">
+            {{ t("action_retry") }}
+          </button>
+          <button class="ghost-button" @click="refreshPage">
+            {{ t("action_refresh") }}
+          </button>
+              </div>
+            </div>
+            <template v-else>
             <div class="mobile-tabs">
               <button
                 class="mobile-tab"
@@ -472,6 +499,7 @@
               :equip-image-src="equipRefiningEquipImageSrc"
               :on-equip-image-error="handleEquipRefiningEquipImageError"
             />
+          </template>
           </div>
         </transition>
       </main>

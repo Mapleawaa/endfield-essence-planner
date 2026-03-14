@@ -12,9 +12,10 @@
       window.WEAPON_IMAGES && typeof window.WEAPON_IMAGES === "object"
         ? window.WEAPON_IMAGES
         : {};
-    const hasImage = (weapon) => Boolean(weapon && weaponImageMap[weapon.name]);
+    const hasImage = (weapon) => Boolean(weapon && (weapon.image || weaponImageMap[weapon.name]));
     const weaponImageSrc = (weapon) => {
       if (!weapon) return "";
+      if (weapon.image) return weapon.image;
       const cached = state.weaponImageSrcCache.get(weapon.name);
       if (cached) return cached;
       const internalName = weaponImageMap[weapon.name];
@@ -32,7 +33,7 @@
       state.weaponCharacterMap.set(weapon.name, uniqueChars);
       uniqueChars.forEach((name) => {
         if (!state.characterImageSrcCache.has(name)) {
-          state.characterImageSrcCache.set(name, encodeURI(`./image/characters/${name}.png`));
+          state.characterImageSrcCache.set(name, encodeURI(`./image/characters/${name}.avif`));
         }
       });
       return uniqueChars;
@@ -41,7 +42,7 @@
       if (!name) return "";
       const cached = state.characterImageSrcCache.get(name);
       if (cached) return cached;
-      const src = encodeURI(`./image/characters/${name}.png`);
+      const src = encodeURI(`./image/characters/${name}.avif`);
       state.characterImageSrcCache.set(name, src);
       return src;
     };
@@ -50,7 +51,7 @@
       if (character.card) return formatMediaPath(character.card);
       const name = character.name || character.id;
       if (!name) return "";
-      return encodeURI(`./image/characters/${name}_card.png`);
+      return encodeURI(`./image/characters/${name}_card.avif`);
     };
     const handleCharacterImageError = (event) => {
       const target = event && event.target;

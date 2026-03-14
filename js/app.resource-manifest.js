@@ -32,6 +32,12 @@
           retryDelayMs: 1200,
           maxRetries: 1,
         },
+      "./js/analytics.bootstrap.js": {
+        featureKey: "analytics",
+        timeoutMs: 12000,
+        retryDelayMs: 1200,
+        maxRetries: 1,
+      },
       },
     },
     app: {
@@ -64,8 +70,6 @@
         "./js/app.modals.js",
         "./js/app.update.js",
         "./js/app.media.js",
-        "./js/app.strategy.js",
-        "./js/app.equip-refining.js",
         "./js/templates.plan-config.js",
         "./js/templates.equip-refining.js",
         "./js/templates.main.01.js",
@@ -74,6 +78,16 @@
         "./js/templates.main.04.js",
         "./js/app.main.js",
       ],
+      viewBundles: {
+        strategy: {
+          scripts: ["./js/app.strategy.js"],
+          init: ["initStrategy"],
+        },
+        "equip-refining": {
+          scripts: ["./js/app.equip-refining.js"],
+          init: ["initEquipRefining"],
+        },
+      },
     },
   };
 

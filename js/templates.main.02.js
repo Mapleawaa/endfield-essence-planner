@@ -231,6 +231,9 @@
                         <span class="rarity" :style="rarityTextStyle(weapon.rarity)">
                           {{ weapon.rarity }}★
                         </span>
+                        <span v-if="weapon.isCustom" class="badge custom-weapon-badge">
+                          {{ t("badge.custom_weapon") }}
+                        </span>
                         <span class="badge warn">{{ t("plan.conflict") }}</span>
                         <span v-if="weapon.short" class="weapon-short">
                           {{ tTerm("short", weapon.short) }}
@@ -355,6 +358,9 @@
                     <span class="rarity" :style="rarityTextStyle(weapon.rarity)">
                       {{ weapon.rarity }}★
                     </span>
+                    <span v-if="weapon.isCustom" class="badge custom-weapon-badge">
+                      {{ t("badge.custom_weapon") }}
+                    </span>
                     <span v-if="weapon.isSelected" class="badge">{{ t("nav.selected") }}</span>
                     <span v-if="weapon.isUnowned" class="badge muted">{{ t("nav.not_owned") }}</span>
                     <span v-if="weapon.isEssenceOwnedReal" class="badge muted">{{ t("nav.essence_owned") }}</span>
@@ -426,6 +432,21 @@
           </div>
 
           <div v-else-if="currentView === 'strategy'" key="strategy" class="view-shell strategy-view">
+            <div v-if="isViewBundleLoading('strategy')" class="empty-state view-load-state">
+              <h2>{{ t("error.view_loading_title") }}</h2>
+              <p>{{ t("error.view_loading_summary") }}</p>
+            </div>
+            <div v-else-if="isViewBundleFailed('strategy')" class="empty-state view-load-state">
+              <h2>{{ t("error.view_load_failed_title") }}</h2>
+              <p>{{ t("error.view_load_failed_summary") }}</p>
+            <button class="ghost-button" @click="retryViewLoad('strategy')">
+              {{ t("action_retry") }}
+            </button>
+            <button class="ghost-button" @click="refreshPage">
+              {{ t("action_refresh") }}
+            </button>
+            </div>
+            <template v-else>
             <div class="strategy-notice">
               {{ t("guide.guide_is_not_finished_yet_content_is_still_being_updated") }}
             </div>

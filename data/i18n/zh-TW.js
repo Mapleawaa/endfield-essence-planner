@@ -864,7 +864,7 @@ Object.assign(window.I18N["zh-TW"].strings, {
   "sync.reset_code_sent_notice": "如果帳號已綁定信箱，重設碼已寄送到信箱。",
   "sync.verification_code_sent_notice": "驗證碼已寄出，請查收信箱。",
   "sync.email_verified_notice": "信箱驗證已完成。",
-  "sync.email_change_notice": "信箱已更新或已寄出驗證郵件。",
+  "sync.email_change_notice": "信箱已更新並送出驗證碼。",
   "sync.dev_settings_saved": "開發設定已儲存。",
   "sync.already_up_to_date": "目前裝置與雲端已經一致。",
   "sync.no_data_notice": "本機與雲端都還沒有可同步的資料。",

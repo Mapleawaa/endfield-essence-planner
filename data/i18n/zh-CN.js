@@ -815,7 +815,7 @@ Object.assign(window.I18N["zh-CN"].strings, {
   "sync.reset_code_sent_notice": "如果账号已绑定邮箱，重置码已发送到邮箱。",
   "sync.verification_code_sent_notice": "验证码已发送，请查收邮箱。",
   "sync.email_verified_notice": "邮箱验证已完成。",
-  "sync.email_change_notice": "邮箱已更新或已发送验证邮件。",
+  "sync.email_change_notice": "邮箱已更新并发送验证码。",
   "sync.payment_claim_pending_notice": "支付凭证已提交，等待系统审核。",
   "sync.payment_claim_matched_notice": "支付凭证匹配成功，会员已自动开通。",
   "sync.payment.alipay": "支付宝",

@@ -755,6 +755,7 @@
       .sync-auth-field {
         display: grid;
         gap: 6px;
+        min-width: 0;
       }
 
       .sync-auth-section {
@@ -773,10 +774,15 @@
       .sync-turnstile-shell {
         position: relative;
         min-height: 74px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
         padding: 10px 12px;
         border-radius: 12px;
         border: 1px solid rgba(var(--color-white-rgb), var(--alpha-12));
         background: rgba(var(--color-white-rgb), var(--alpha-04));
+        overflow-x: auto;
+        overflow-y: hidden;
       }
 
       .sync-turnstile-shell.is-loading {
@@ -800,6 +806,13 @@
 
       .sync-turnstile-widget {
         min-height: 52px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .sync-turnstile-widget iframe {
+        max-width: 100%;
       }
 
       .sync-turnstile-placeholder {
@@ -1371,6 +1384,7 @@
         .sync-turnstile-shell {
           min-height: 66px;
           padding: 8px 10px;
+          overflow-x: auto;
         }
 
         .sync-card .secondary-hint {

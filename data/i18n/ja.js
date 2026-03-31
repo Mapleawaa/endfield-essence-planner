@@ -864,7 +864,7 @@ Object.assign(window.I18N["ja"].strings, {
   "sync.reset_code_sent_notice": "アカウントにメールアドレスが紐付いている場合、リセットコードを送信しました。",
   "sync.verification_code_sent_notice": "認証コードを送信しました。メールをご確認ください。",
   "sync.email_verified_notice": "メール認証が完了しました。",
-  "sync.email_change_notice": "メールアドレスを更新したか、認証メールを送信しました。",
+  "sync.email_change_notice": "メールアドレスを更新し、確認コードを送信しました。",
   "sync.dev_settings_saved": "開発設定を保存しました。",
   "sync.already_up_to_date": "この端末は既にクラウドと同期済みです。",
   "sync.no_data_notice": "ローカルにもクラウドにも、まだ同期するデータがありません。",

@@ -49,6 +49,32 @@
     let syncTurnstileMountVersion = 0;
     let adblockDetectionTimer = null;
     let lastAutoSyncEntitlement = false;
+    let syncEmailActionCooldownTimer = null;
+
+    const isLikelyEmail = (value) => {
+      const email = String(value || "").trim();
+      return email !== "" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const clearSyncEmailActionCooldownTimer = () => {
+      if (!syncEmailActionCooldownTimer) return;
+      clearInterval(syncEmailActionCooldownTimer);
+      syncEmailActionCooldownTimer = null;
+    };
+
+    const startSyncEmailActionCooldown = (seconds) => {
+      const total = Math.max(0, Number(seconds) || 0);
+      state.syncEmailActionCooldownSeconds.value = total;
+      clearSyncEmailActionCooldownTimer();
+      if (total <= 0) return;
+      syncEmailActionCooldownTimer = setInterval(() => {
+        const next = Math.max(0, Number(state.syncEmailActionCooldownSeconds.value || 0) - 1);
+        state.syncEmailActionCooldownSeconds.value = next;
+        if (next <= 0) {
+          clearSyncEmailActionCooldownTimer();
+        }
+      }, 1000);
+    };
 
     const getRefValue = (target, fallback) =>
       target && typeof target === "object" && "value" in target ? target.value : fallback;
@@ -1484,6 +1510,10 @@
       if (state.syncEmailActionNotice && "value" in state.syncEmailActionNotice) {
         state.syncEmailActionNotice.value = "";
       }
+      if (state.syncEmailActionCooldownSeconds && "value" in state.syncEmailActionCooldownSeconds) {
+        state.syncEmailActionCooldownSeconds.value = 0;
+      }
+      clearSyncEmailActionCooldownTimer();
     };
 
     const openSyncEmailModal = () => {
@@ -1496,6 +1526,8 @@
       state.syncEmailCodeInput.value = '';
       state.syncEmailActionError.value = '';
       state.syncEmailActionNotice.value = '';
+      state.syncEmailActionCooldownSeconds.value = 0;
+      clearSyncEmailActionCooldownTimer();
     };
 
     const sendSyncVerificationCode = async () => {
@@ -1517,6 +1549,7 @@
         const notice = createSyncTextEntry('sync.verification_code_sent_notice', '验证码已发送，请查收邮箱。');
         state.syncEmailActionNotice.value = resolveSyncEntry(notice).text;
         setSyncNotice(notice, 'info');
+        startSyncEmailActionCooldown(60);
       } catch (error) {
         handleSyncRequestFailure(error, 'sync.error_sync_failed', '同步失败，请稍后重试。');
         state.syncEmailActionError.value = state.syncError.value;
@@ -1545,15 +1578,30 @@
           return;
         }
 
+        const nextEmail = String(state.syncEmailActionInput.value || '').trim();
+        if (!nextEmail) {
+          const message = createSyncTextEntry('sync.error_invalid_email', '请输入有效邮箱地址。');
+          state.syncEmailActionError.value = resolveSyncEntry(message).text;
+          setSyncError(message);
+          return;
+        }
+        if (!isLikelyEmail(nextEmail)) {
+          const message = createSyncTextEntry('sync.error_invalid_email', '请输入有效邮箱地址。');
+          state.syncEmailActionError.value = resolveSyncEntry(message).text;
+          setSyncError(message);
+          return;
+        }
+
         state.syncEmailActionNotice.value = typeof state.t === 'function' ? state.t('sync.email_changing_notice') : '正在修改邮箱...';
         await requestJson('change-email', {
           method: 'POST',
-          body: JSON.stringify({ email: String(state.syncEmailActionInput.value || '').trim() }),
+          body: JSON.stringify({ email: nextEmail }),
         });
-        const notice = createSyncTextEntry('sync.email_change_notice', '邮箱已更新或已发送验证邮件。');
+        const notice = createSyncTextEntry('sync.email_change_notice', '邮箱已更新并发送验证码。');
         state.syncEmailActionNotice.value = resolveSyncEntry(notice).text;
         await refreshSyncSession(true);
         setSyncNotice(notice, 'info');
+        startSyncEmailActionCooldown(60);
       } catch (error) {
         handleSyncRequestFailure(error, 'sync.error_sync_failed', '同步失败，请稍后重试。');
         state.syncEmailActionError.value = state.syncError.value;
@@ -2762,6 +2810,7 @@
     state.syncEmailCodeInput = ref('');
     state.syncEmailActionError = ref('');
     state.syncEmailActionNotice = ref('');
+    state.syncEmailActionCooldownSeconds = ref(0);
     state.syncPaymentChannelInput = ref('alipay');
     state.syncPaymentReferenceInput = ref('');
     state.syncPaymentClaimError = ref('');

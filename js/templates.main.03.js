@@ -1127,8 +1127,8 @@
                   />
                 </div>
                 <div class="secondary-actions">
-                  <button class="ghost-button" :disabled="syncBusy || syncFrontendBlocked || !(syncUser && syncUser.email) || syncUser.email_verified === true" @click="sendSyncVerificationCode">
-                    {{ t("sync.send_verification_code_action") }}
+                  <button class="ghost-button" :disabled="syncBusy || syncFrontendBlocked || syncEmailActionCooldownSeconds > 0 || !(syncUser && syncUser.email) || syncUser.email_verified === true" @click="sendSyncVerificationCode">
+                    {{ syncEmailActionCooldownSeconds > 0 ? `${t("sync.send_verification_code_action")}（${syncEmailActionCooldownSeconds}s）` : t("sync.send_verification_code_action") }}
                   </button>
                   <button class="about-button" :disabled="syncBusy || syncFrontendBlocked || !(syncUser && syncUser.email) || syncUser.email_verified === true" @click="submitSyncEmailAction('verify')">
                     {{ t("sync.verify_email_action") }}
@@ -1150,8 +1150,8 @@
                   />
                 </div>
                 <div class="secondary-actions">
-                  <button class="about-button" :disabled="syncBusy || syncFrontendBlocked" @click="submitSyncEmailAction('change')">
-                    {{ t("sync.change_email_action") }}
+                  <button class="about-button" :disabled="syncBusy || syncFrontendBlocked || syncEmailActionCooldownSeconds > 0 || !syncEmailActionInput || !syncEmailActionInput.trim()" @click="submitSyncEmailAction('change')">
+                    {{ syncEmailActionCooldownSeconds > 0 ? `${t("sync.change_email_action")}（${syncEmailActionCooldownSeconds}s）` : t("sync.change_email_action") }}
                   </button>
                 </div>
               </div>

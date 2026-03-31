@@ -1999,6 +1999,7 @@
         syncEmailCodeInput: state.syncEmailCodeInput,
         syncEmailActionError: state.syncEmailActionError,
         syncEmailActionNotice: state.syncEmailActionNotice,
+        syncEmailActionCooldownSeconds: state.syncEmailActionCooldownSeconds,
         syncPaymentChannelInput: state.syncPaymentChannelInput,
         syncPaymentReferenceInput: state.syncPaymentReferenceInput,
         syncPaymentClaimError: state.syncPaymentClaimError,

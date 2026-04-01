@@ -453,7 +453,13 @@
   </transition>
 
       <transition name="fade-scale">
-        <div v-if="showSyncModal" class="about-overlay sync-overlay" @click.self="closeSyncModal()">
+        <div
+          v-if="showSyncModal"
+          class="about-overlay sync-overlay"
+          @pointerdown.self="beginOverlayPointerClose('sync-modal', $event)"
+          @pointerup.self="finishOverlayPointerClose('sync-modal', closeSyncModal, $event)"
+          @pointercancel.self="cancelOverlayPointerClose('sync-modal')"
+        >
           <div class="about-card notice-card sync-card">
             <h3>{{ t("nav.sync_login") }}</h3>
             <div class="about-body sync-body">
@@ -935,7 +941,9 @@
         <div
           v-if="showSyncModal && syncConflictConfirmMode"
           class="about-overlay sync-overlay sync-conflict-confirm-overlay"
-          @click.self="cancelSyncConflictConfirmation"
+          @pointerdown.self="beginOverlayPointerClose('sync-conflict-confirm', $event)"
+          @pointerup.self="finishOverlayPointerClose('sync-conflict-confirm', cancelSyncConflictConfirmation, $event)"
+          @pointercancel.self="cancelOverlayPointerClose('sync-conflict-confirm')"
         >
           <div class="about-card notice-card sync-conflict-confirm-card">
             <h3>{{ t("sync.conflict_title") }}</h3>
@@ -972,7 +980,9 @@
         <div
           v-if="showSyncModal && syncShowPasswordModal"
           class="about-overlay sync-overlay"
-          @click.self="closeSyncPasswordModal"
+          @pointerdown.self="beginOverlayPointerClose('sync-password-modal', $event)"
+          @pointerup.self="finishOverlayPointerClose('sync-password-modal', closeSyncPasswordModal, $event)"
+          @pointercancel.self="cancelOverlayPointerClose('sync-password-modal')"
         >
           <div class="about-card notice-card sync-conflict-confirm-card">
             <h3>{{ t("sync.change_password_title") }}</h3>
@@ -1094,7 +1104,13 @@
       </transition>
 
       <transition name="fade-scale">
-        <div v-if="showSyncModal && syncShowEmailModal" class="about-overlay sync-overlay" @click.self="closeSyncEmailModal">
+        <div
+          v-if="showSyncModal && syncShowEmailModal"
+          class="about-overlay sync-overlay"
+          @pointerdown.self="beginOverlayPointerClose('sync-email-modal', $event)"
+          @pointerup.self="finishOverlayPointerClose('sync-email-modal', closeSyncEmailModal, $event)"
+          @pointercancel.self="cancelOverlayPointerClose('sync-email-modal')"
+        >
           <div class="about-card notice-card sync-conflict-confirm-card">
             <h3>{{ t("sync.email_action_title") }}</h3>
             <div class="about-body">
@@ -1127,10 +1143,10 @@
                   />
                 </div>
                 <div class="secondary-actions">
-                  <button class="ghost-button" :disabled="syncBusy || syncFrontendBlocked || syncEmailActionCooldownSeconds > 0 || !(syncUser && syncUser.email) || syncUser.email_verified === true" @click="sendSyncVerificationCode">
-                    {{ syncEmailActionCooldownSeconds > 0 ? (t("sync.send_verification_code_action") + "（" + syncEmailActionCooldownSeconds + "s）") : t("sync.send_verification_code_action") }}
+                  <button class="ghost-button" :disabled="syncBusy || syncFrontendBlocked || syncVerificationCooldownSeconds > 0 || !(syncUser && syncUser.email) || syncUser.email_verified === true" @click="sendSyncVerificationCode">
+                    {{ syncVerificationCooldownSeconds > 0 ? (t("sync.send_verification_code_action") + "（" + syncVerificationCooldownSeconds + "s）") : t("sync.send_verification_code_action") }}
                   </button>
-                  <button class="about-button" :disabled="syncBusy || syncFrontendBlocked || !(syncUser && syncUser.email) || syncUser.email_verified === true" @click="submitSyncEmailAction('verify')">
+                  <button class="about-button" :disabled="syncBusy || syncFrontendBlocked || syncVerificationSubmitCooldownSeconds > 0 || !(syncUser && syncUser.email) || syncUser.email_verified === true || !syncEmailCodeInput || !syncEmailCodeInput.trim()" @click="submitSyncEmailAction('verify')">
                     {{ t("sync.verify_email_action") }}
                   </button>
                 </div>
@@ -1150,8 +1166,8 @@
                   />
                 </div>
                 <div class="secondary-actions">
-                  <button class="about-button" :disabled="syncBusy || syncFrontendBlocked || syncEmailActionCooldownSeconds > 0 || !syncEmailActionInput || !syncEmailActionInput.trim()" @click="submitSyncEmailAction('change')">
-                    {{ syncEmailActionCooldownSeconds > 0 ? (t("sync.change_email_action") + "（" + syncEmailActionCooldownSeconds + "s）") : t("sync.change_email_action") }}
+                  <button class="about-button" :disabled="syncBusy || syncFrontendBlocked || syncEmailChangeCooldownSeconds > 0 || !syncEmailActionInput || !syncEmailActionInput.trim()" @click="submitSyncEmailAction('change')">
+                    {{ syncEmailChangeCooldownSeconds > 0 ? (t("sync.change_email_action") + "（" + syncEmailChangeCooldownSeconds + "s）") : t("sync.change_email_action") }}
                   </button>
                 </div>
               </div>
@@ -1170,7 +1186,13 @@
       </transition>
 
       <transition name="fade-scale">
-        <div v-if="showNotice" class="about-overlay notice-overlay" @click.self="closeNotice">
+        <div
+          v-if="showNotice"
+          class="about-overlay notice-overlay"
+          @pointerdown.self="beginOverlayPointerClose('notice-modal', $event)"
+          @pointerup.self="finishOverlayPointerClose('notice-modal', closeNotice, $event)"
+          @pointercancel.self="cancelOverlayPointerClose('notice-modal')"
+        >
           <div v-if="contentLoading" class="about-card notice-card">{{ t("badge.item_12") }}</div>
           <div v-else class="about-card notice-card">
             <h3>{{ announcement.title }}</h3>
@@ -1254,7 +1276,9 @@
         <div
           v-if="showChangelog"
           class="about-overlay changelog-overlay"
-          @click.self="showChangelog = false"
+          @pointerdown.self="beginOverlayPointerClose('changelog-modal', $event)"
+          @pointerup.self="finishOverlayPointerClose('changelog-modal', () => { showChangelog = false; }, $event)"
+          @pointercancel.self="cancelOverlayPointerClose('changelog-modal')"
         >
           <div v-if="contentLoading" class="about-card notice-card">{{ t("badge.item_12") }}</div>
           <div v-else class="about-card changelog-card">
@@ -1283,7 +1307,13 @@
       </transition>
 
       <transition name="fade-scale">
-        <div v-if="showFaq" class="about-overlay faq-overlay" @click.self="showFaq = false">
+        <div
+          v-if="showFaq"
+          class="about-overlay faq-overlay"
+          @pointerdown.self="beginOverlayPointerClose('faq-modal', $event)"
+          @pointerup.self="finishOverlayPointerClose('faq-modal', () => { showFaq = false; }, $event)"
+          @pointercancel.self="cancelOverlayPointerClose('faq-modal')"
+        >
           <div v-if="contentLoading" class="about-card notice-card">{{ t("badge.item_12") }}</div>
           <div v-else class="about-card faq-card">
             <h3>{{ faqContent.title }}</h3>
@@ -1304,7 +1334,13 @@
       </transition>
 
       <transition name="fade-scale">
-                <div v-if="showAbout" class="about-overlay about-overlay-main" @click.self="showAbout = false">
+                <div
+                  v-if="showAbout"
+                  class="about-overlay about-overlay-main"
+                  @pointerdown.self="beginOverlayPointerClose('about-modal', $event)"
+                  @pointerup.self="finishOverlayPointerClose('about-modal', () => { showAbout = false; }, $event)"
+                  @pointercancel.self="cancelOverlayPointerClose('about-modal')"
+                >
                   <div v-if="contentLoading" class="about-card notice-card">{{ t("badge.item_12") }}</div>
                   <div v-else class="about-card about-main">
                     <h3>{{ aboutContent.title }}</h3>

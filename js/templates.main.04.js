@@ -71,7 +71,13 @@
       </transition>
 
       <transition name="fade-scale">
-        <div v-if="showTutorialSkipConfirm" class="about-overlay" @click.self="closeTutorialSkipConfirm">
+        <div
+          v-if="showTutorialSkipConfirm"
+          class="about-overlay"
+          @pointerdown.self="beginOverlayPointerClose('tutorial-skip-confirm', $event)"
+          @pointerup.self="finishOverlayPointerClose('tutorial-skip-confirm', closeTutorialSkipConfirm, $event)"
+          @pointercancel.self="cancelOverlayPointerClose('tutorial-skip-confirm')"
+        >
           <div class="about-card tutorial-modal">
             <h3>{{ t("tutorial.skip_tutorial") }}</h3>
             <p>{{ t("tutorial.are_you_sure_you_want_to_skip_this_version_s_tutorial_th") }}</p>
@@ -367,7 +373,13 @@
       </transition>
 
       <transition name="fade-scale">
-        <div v-if="showWeaponAttrDataModal" class="about-overlay weapon-attr-overlay" @click.self="closeWeaponAttrDataModal">
+        <div
+          v-if="showWeaponAttrDataModal"
+          class="about-overlay weapon-attr-overlay"
+          @pointerdown.self="beginOverlayPointerClose('weapon-attr-modal', $event)"
+          @pointerup.self="finishOverlayPointerClose('weapon-attr-modal', closeWeaponAttrDataModal, $event)"
+          @pointercancel.self="cancelOverlayPointerClose('weapon-attr-modal')"
+        >
           <div class="about-card weapon-attr-card">
             <div class="weapon-attr-body">
               <h3>{{ t("modal.weapon_attribute_data_fix_title") }}</h3>

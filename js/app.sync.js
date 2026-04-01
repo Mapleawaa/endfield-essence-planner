@@ -10,6 +10,9 @@
     const syncEmailToastSessionKey = state.syncEmailToastSessionKey || "planner-sync-email-toast:v1";
     const syncPlanToastSessionKey = state.syncPlanToastSessionKey || "planner-sync-plan-toast:v1";
     const syncRestrictionToastSessionKey = state.syncRestrictionToastSessionKey || "planner-sync-restriction-toast:v1";
+    const syncVerificationCooldownSessionKey = state.syncVerificationCooldownSessionKey || "planner-sync-email-verify-cooldown:v1";
+    const syncVerificationSubmitCooldownSessionKey = state.syncVerificationSubmitCooldownSessionKey || "planner-sync-email-verify-submit-cooldown:v1";
+    const syncEmailChangeCooldownSessionKey = state.syncEmailChangeCooldownSessionKey || "planner-sync-email-change-cooldown:v1";
     const getDefaultApiBase = () => "https://ldy.canmoe.com/api";
     const devHostPattern = /^(localhost|127\.0\.0\.1)$/i;
     const defaultMeta = {
@@ -49,31 +52,168 @@
     let syncTurnstileMountVersion = 0;
     let adblockDetectionTimer = null;
     let lastAutoSyncEntitlement = false;
-    let syncEmailActionCooldownTimer = null;
+    let syncVerificationCooldownTimer = null;
+    let syncVerificationSubmitCooldownTimer = null;
+    let syncEmailChangeCooldownTimer = null;
+    const overlayClosePointerState = Object.create(null);
+    const overlayClosePointerMoveThreshold = 8;
 
     const isLikelyEmail = (value) => {
       const email = String(value || "").trim();
       return email !== "" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     };
 
-    const clearSyncEmailActionCooldownTimer = () => {
-      if (!syncEmailActionCooldownTimer) return;
-      clearInterval(syncEmailActionCooldownTimer);
-      syncEmailActionCooldownTimer = null;
+    const getOverlayPointerPosition = (event) => {
+      if (!event || typeof event.clientX !== "number" || typeof event.clientY !== "number") {
+        return null;
+      }
+      return { x: event.clientX, y: event.clientY };
     };
 
-    const startSyncEmailActionCooldown = (seconds) => {
-      const total = Math.max(0, Number(seconds) || 0);
-      state.syncEmailActionCooldownSeconds.value = total;
-      clearSyncEmailActionCooldownTimer();
-      if (total <= 0) return;
-      syncEmailActionCooldownTimer = setInterval(() => {
-        const next = Math.max(0, Number(state.syncEmailActionCooldownSeconds.value || 0) - 1);
-        state.syncEmailActionCooldownSeconds.value = next;
-        if (next <= 0) {
-          clearSyncEmailActionCooldownTimer();
+    const beginOverlayPointerClose = (key, event) => {
+      if (!key) return;
+      const target = event && event.target ? event.target : null;
+      const currentTarget = event && event.currentTarget ? event.currentTarget : null;
+      if (!target || !currentTarget || target !== currentTarget) {
+        delete overlayClosePointerState[key];
+        return;
+      }
+      overlayClosePointerState[key] = {
+        pointerId: typeof event.pointerId === "number" ? event.pointerId : null,
+        position: getOverlayPointerPosition(event),
+      };
+    };
+
+    const cancelOverlayPointerClose = (key) => {
+      if (!key) return;
+      delete overlayClosePointerState[key];
+    };
+
+    const finishOverlayPointerClose = (key, closeFn, event) => {
+      if (!key) return;
+      const snapshot = overlayClosePointerState[key];
+      delete overlayClosePointerState[key];
+      if (!snapshot || typeof closeFn !== "function") return;
+      const target = event && event.target ? event.target : null;
+      const currentTarget = event && event.currentTarget ? event.currentTarget : null;
+      if (!target || !currentTarget || target !== currentTarget) return;
+      if (snapshot.pointerId !== null && typeof event.pointerId === "number" && snapshot.pointerId !== event.pointerId) return;
+      const endPosition = getOverlayPointerPosition(event);
+      if (snapshot.position && endPosition) {
+        const deltaX = endPosition.x - snapshot.position.x;
+        const deltaY = endPosition.y - snapshot.position.y;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        if (distance > overlayClosePointerMoveThreshold) return;
+      }
+      closeFn();
+    };
+
+    const readSessionStorageValue = (key) => {
+      if (typeof window === "undefined" || !window.sessionStorage) return "";
+      try {
+        return String(window.sessionStorage.getItem(key) || "");
+      } catch (error) {
+        return "";
+      }
+    };
+
+    const writeSessionStorageValue = (key, value) => {
+      if (typeof window === "undefined" || !window.sessionStorage) return;
+      try {
+        if (value === "" || value == null) {
+          window.sessionStorage.removeItem(key);
+          return;
         }
-      }, 1000);
+        window.sessionStorage.setItem(key, String(value));
+      } catch (error) {
+        // ignore sessionStorage write failures
+      }
+    };
+
+    const clearCooldownTimer = (kind) => {
+      if (kind === "verify") {
+        if (!syncVerificationCooldownTimer) return;
+        clearInterval(syncVerificationCooldownTimer);
+        syncVerificationCooldownTimer = null;
+        return;
+      }
+      if (kind === "verify-submit") {
+        if (!syncVerificationSubmitCooldownTimer) return;
+        clearInterval(syncVerificationSubmitCooldownTimer);
+        syncVerificationSubmitCooldownTimer = null;
+        return;
+      }
+      if (!syncEmailChangeCooldownTimer) return;
+      clearInterval(syncEmailChangeCooldownTimer);
+      syncEmailChangeCooldownTimer = null;
+    };
+
+    const getCooldownStateByKind = (kind) =>
+      kind === "verify"
+        ? {
+            ref: state.syncVerificationCooldownSeconds,
+            storageKey: syncVerificationCooldownSessionKey,
+          }
+        : kind === "verify-submit"
+          ? {
+              ref: state.syncVerificationSubmitCooldownSeconds,
+              storageKey: syncVerificationSubmitCooldownSessionKey,
+            }
+        : {
+            ref: state.syncEmailChangeCooldownSeconds,
+            storageKey: syncEmailChangeCooldownSessionKey,
+          };
+
+    const applyCooldownSeconds = (kind, seconds) => {
+      const target = getCooldownStateByKind(kind);
+      if (!target || !target.ref || !("value" in target.ref)) return;
+      const total = Math.max(0, Number(seconds) || 0);
+      target.ref.value = total;
+      clearCooldownTimer(kind);
+      if (total <= 0) {
+        writeSessionStorageValue(target.storageKey, "");
+        return;
+      }
+      const dueAt = Date.now() + total * 1000;
+      writeSessionStorageValue(target.storageKey, String(dueAt));
+      const tick = () => {
+        const remaining = Math.max(0, Math.ceil((dueAt - Date.now()) / 1000));
+        target.ref.value = remaining;
+        if (remaining <= 0) {
+          clearCooldownTimer(kind);
+          writeSessionStorageValue(target.storageKey, "");
+        }
+      };
+      tick();
+      const timer = setInterval(tick, 1000);
+      if (kind === "verify") {
+        syncVerificationCooldownTimer = timer;
+      } else if (kind === "verify-submit") {
+        syncVerificationSubmitCooldownTimer = timer;
+      } else {
+        syncEmailChangeCooldownTimer = timer;
+      }
+    };
+
+    const restoreCooldownFromSession = (kind) => {
+      const target = getCooldownStateByKind(kind);
+      const dueAt = Number(readSessionStorageValue(target.storageKey) || 0);
+      if (!Number.isFinite(dueAt) || dueAt <= Date.now()) {
+        applyCooldownSeconds(kind, 0);
+        return;
+      }
+      applyCooldownSeconds(kind, Math.ceil((dueAt - Date.now()) / 1000));
+    };
+
+    const startEmailActionCooldown = (kind, seconds) => {
+      applyCooldownSeconds(kind, seconds);
+    };
+
+    const getEmailActionCooldownRemaining = (kind) => {
+      const target = getCooldownStateByKind(kind);
+      if (!target || !target.ref || !("value" in target.ref)) return 0;
+      const remaining = Number(target.ref.value || 0);
+      return Number.isFinite(remaining) && remaining > 0 ? remaining : 0;
     };
 
     const getRefValue = (target, fallback) =>
@@ -969,6 +1109,7 @@
         password_mismatch: "sync.error_password_mismatch",
         account_disabled: "sync.error_account_disabled",
         email_unavailable: "sync.error_email_unavailable",
+        email_unchanged: "sync.error_email_unchanged",
         email_send_failed: "sync.error_email_send_failed",
         email_verification_issue_failed: "sync.error_email_verification_issue_failed",
         smtp_disabled: "sync.error_smtp_disabled",
@@ -976,6 +1117,7 @@
         smtp_connect_failed: "sync.error_smtp_connect_failed",
         smtp_rejected: "sync.error_smtp_rejected",
         email_taken: "sync.error_email_taken",
+        missing_verification_code: "sync.error_missing_verification_code",
         invalid_verification_code: "sync.error_invalid_verification_code",
         invalid_payment_claim: "sync.error_invalid_payment_claim",
         payment_claim_duplicate: "sync.error_payment_claim_duplicate",
@@ -1517,24 +1659,43 @@
       if (state.syncEmailActionNotice && "value" in state.syncEmailActionNotice) {
         state.syncEmailActionNotice.value = "";
       }
-      if (state.syncEmailActionCooldownSeconds && "value" in state.syncEmailActionCooldownSeconds) {
-        state.syncEmailActionCooldownSeconds.value = 0;
+    };
+
+    const getSyncHttpStatus = (error) => {
+      const status = Number(error && error.status);
+      return Number.isFinite(status) ? status : 0;
+    };
+
+    const getEmailActionCooldownSeconds = (error) => {
+      const payload = error && error.payload && typeof error.payload === "object" ? error.payload : null;
+      const retryAfter = Number(payload && payload.retry_after);
+      if (Number.isFinite(retryAfter) && retryAfter > 0) {
+        return Math.max(15, Math.min(600, Math.ceil(retryAfter)));
       }
-      clearSyncEmailActionCooldownTimer();
+      const status = getSyncHttpStatus(error);
+      if (status === 429) return 90;
+      return 60;
+    };
+
+    const getVerificationSubmitCooldownSeconds = (error) => {
+      const payload = error && error.payload && typeof error.payload === "object" ? error.payload : null;
+      const retryAfter = Number(payload && payload.retry_after);
+      if (Number.isFinite(retryAfter) && retryAfter > 0) {
+        return Math.max(5, Math.min(30, Math.ceil(retryAfter)));
+      }
+      const status = getSyncHttpStatus(error);
+      if (status === 429) return 30;
+      return 5;
     };
 
     const openSyncEmailModal = () => {
       if (!ensureSyncFrontendAllowed()) return;
       state.syncShowEmailModal.value = true;
       state.syncEmailActionMode.value = 'change';
-      state.syncEmailActionInput.value = state.syncUser.value && state.syncUser.value.pending_email
-        ? String(state.syncUser.value.pending_email)
-        : (state.syncUser.value && state.syncUser.value.email ? String(state.syncUser.value.email) : '');
+      state.syncEmailActionInput.value = '';
       state.syncEmailCodeInput.value = '';
       state.syncEmailActionError.value = '';
       state.syncEmailActionNotice.value = '';
-      state.syncEmailActionCooldownSeconds.value = 0;
-      clearSyncEmailActionCooldownTimer();
     };
 
     const sendSyncVerificationCode = async () => {
@@ -1548,6 +1709,7 @@
       }
       state.syncEmailActionNotice.value = typeof state.t === 'function' ? state.t('sync.email_sending_notice') : '正在发送验证码...';
       state.syncBusy.value = true;
+      let requestError = null;
       try {
         await requestJson('change-email', {
           method: 'POST',
@@ -1556,26 +1718,43 @@
         const notice = createSyncTextEntry('sync.verification_code_sent_notice', '验证码已发送，请查收邮箱。');
         state.syncEmailActionNotice.value = resolveSyncEntry(notice).text;
         setSyncNotice(notice, 'info');
-        startSyncEmailActionCooldown(60);
       } catch (error) {
+        requestError = error;
         handleSyncRequestFailure(error, 'sync.error_sync_failed', '同步失败，请稍后重试。');
         state.syncEmailActionError.value = state.syncError.value;
       } finally {
+        startEmailActionCooldown('verify', getEmailActionCooldownSeconds(requestError));
         state.syncBusy.value = false;
       }
     };
 
     const submitSyncEmailAction = async (mode) => {
       if (!state.syncAuthenticated.value) return;
+      const actionMode = String(mode || state.syncEmailActionMode.value || 'change');
+      const cooldownKind = actionMode === 'verify' ? 'verify-submit' : 'change';
+      const cooldownRemaining = getEmailActionCooldownRemaining(cooldownKind);
+      if (cooldownRemaining > 0) {
+        return;
+      }
+      let requestAttempted = false;
+      let requestError = null;
       state.syncEmailActionError.value = '';
       state.syncEmailActionNotice.value = '';
       state.syncBusy.value = true;
       try {
-        if ((mode || state.syncEmailActionMode.value) === 'verify') {
+        if (actionMode === 'verify') {
+          const verificationCode = String(state.syncEmailCodeInput.value || '').trim();
+          if (!verificationCode) {
+            const message = createSyncTextEntry('sync.error_missing_verification_code', '请输入邮箱验证码。');
+            state.syncEmailActionError.value = resolveSyncEntry(message).text;
+            setSyncError(message);
+            return;
+          }
           state.syncEmailActionNotice.value = typeof state.t === 'function' ? state.t('sync.email_verifying_notice') : '正在验证邮箱...';
+          requestAttempted = true;
           await requestJson('verify-email', {
             method: 'POST',
-            body: JSON.stringify({ code: String(state.syncEmailCodeInput.value || '').trim() }),
+            body: JSON.stringify({ code: verificationCode }),
           });
           const notice = createSyncTextEntry('sync.email_verified_notice', '邮箱验证已完成。');
           state.syncEmailActionNotice.value = resolveSyncEntry(notice).text;
@@ -1599,7 +1778,22 @@
           return;
         }
 
+        const currentEmail = state.syncUser && state.syncUser.value && state.syncUser.value.email
+          ? String(state.syncUser.value.email).trim().toLowerCase()
+          : '';
+        const pendingEmail = state.syncUser && state.syncUser.value && state.syncUser.value.pending_email
+          ? String(state.syncUser.value.pending_email).trim().toLowerCase()
+          : '';
+        const normalizedNextEmail = String(nextEmail || '').trim().toLowerCase();
+        if (normalizedNextEmail === currentEmail || (pendingEmail && normalizedNextEmail === pendingEmail)) {
+          const message = createSyncTextEntry('sync.error_email_unchanged', '新邮箱不能与当前邮箱相同。');
+          state.syncEmailActionError.value = resolveSyncEntry(message).text;
+          setSyncError(message);
+          return;
+        }
+
         state.syncEmailActionNotice.value = typeof state.t === 'function' ? state.t('sync.email_changing_notice') : '正在修改邮箱...';
+        requestAttempted = true;
         await requestJson('change-email', {
           method: 'POST',
           body: JSON.stringify({ email: nextEmail }),
@@ -1608,11 +1802,19 @@
         state.syncEmailActionNotice.value = resolveSyncEntry(notice).text;
         await refreshSyncSession(true);
         setSyncNotice(notice, 'info');
-        startSyncEmailActionCooldown(60);
       } catch (error) {
+        requestError = error;
         handleSyncRequestFailure(error, 'sync.error_sync_failed', '同步失败，请稍后重试。');
         state.syncEmailActionError.value = state.syncError.value;
       } finally {
+        if (requestAttempted) {
+          startEmailActionCooldown(
+            actionMode === 'verify' ? 'verify-submit' : 'change',
+            actionMode === 'verify'
+              ? getVerificationSubmitCooldownSeconds(requestError)
+              : getEmailActionCooldownSeconds(requestError)
+          );
+        }
         state.syncBusy.value = false;
       }
     };
@@ -1947,6 +2149,10 @@
           key: 'sync.error_email_unavailable',
           fallback: '当前服务暂不支持邮箱功能。',
         },
+        email_unchanged: {
+          key: 'sync.error_email_unchanged',
+          fallback: '新邮箱不能与当前邮箱相同。',
+        },
         email_send_failed: {
           key: 'sync.error_email_send_failed',
           fallback: '邮件发送失败，请稍后重试。',
@@ -2002,6 +2208,10 @@
         invalid_payload: {
           key: 'sync.error_invalid_payload',
           fallback: '同步数据格式无效。',
+        },
+        missing_verification_code: {
+          key: 'sync.error_missing_verification_code',
+          fallback: '请输入邮箱验证码。',
         },
         email_verification_issue_failed: {
           key: 'sync.error_email_verification_issue_failed',
@@ -2573,7 +2783,7 @@
               password,
               "cf-turnstile-response": String(state.syncTurnstileToken.value || ""),
             };
-        await requestJson(isRegister ? "register" : "login", {
+        const authResult = await requestJson(isRegister ? "register" : "login", {
           method: "POST",
           body: JSON.stringify(authPayload),
         });
@@ -2585,9 +2795,11 @@
         destroySyncTurnstileWidget();
         await refreshSyncSession(true);
         setSyncNotice(createSyncTextEntry(
-          state.syncAuthMode.value === "register" ? "sync.register_success" : "sync.login_success",
           state.syncAuthMode.value === "register"
-            ? "注册成功，已自动登录。验证码邮件已发送，请检查收件箱或垃圾箱。"
+            ? "sync.register_success_no_mail"
+            : "sync.login_success",
+          state.syncAuthMode.value === "register"
+            ? "注册成功，已自动登录。请在“验证/修改邮箱”中验证邮箱。"
             : "登录成功。"
         ), "info");
         await handleInitialRemoteStateAfterAuth();
@@ -2845,7 +3057,9 @@
     state.syncEmailCodeInput = ref('');
     state.syncEmailActionError = ref('');
     state.syncEmailActionNotice = ref('');
-    state.syncEmailActionCooldownSeconds = ref(0);
+    state.syncVerificationCooldownSeconds = ref(0);
+    state.syncVerificationSubmitCooldownSeconds = ref(0);
+    state.syncEmailChangeCooldownSeconds = ref(0);
     state.syncPaymentChannelInput = ref('alipay');
     state.syncPaymentReferenceInput = ref('');
     state.syncPaymentClaimError = ref('');
@@ -2955,6 +3169,9 @@
     state.closeSyncPasswordModal = closeSyncPasswordModal;
     state.openSyncEmailModal = openSyncEmailModal;
     state.closeSyncEmailModal = closeSyncEmailModal;
+    state.beginOverlayPointerClose = beginOverlayPointerClose;
+    state.finishOverlayPointerClose = finishOverlayPointerClose;
+    state.cancelOverlayPointerClose = cancelOverlayPointerClose;
     state.submitSyncEmailAction = submitSyncEmailAction;
     state.sendSyncVerificationCode = sendSyncVerificationCode;
     state.submitPaymentClaim = submitPaymentClaim;
@@ -3000,6 +3217,9 @@
         if (readSessionHint()) {
           refreshSyncSession(false, { forceFullSnapshot: true });
         }
+        restoreCooldownFromSession('verify');
+        restoreCooldownFromSession('verify-submit');
+        restoreCooldownFromSession('change');
         if (state.showSyncModal.value) {
           void mountSyncTurnstile();
         }
@@ -3025,6 +3245,9 @@
         state.__handleSyncPageHide = null;
         clearSyncModalCleanupTimer();
         destroySyncTurnstileWidget();
+        clearCooldownTimer('verify');
+        clearCooldownTimer('verify-submit');
+        clearCooldownTimer('change');
       });
     }
 

@@ -691,10 +691,10 @@
                       <div class="secondary-hint" v-else-if="syncUser && syncUser.email_verified === false">
                         {{ t("sync.email_unverified_hint", { time: syncUser.email_verification_deadline || '-' }) }}
                       </div>
-                      <div class="secondary-hint" v-if="syncUser && syncUser.is_trial_active">
-                        {{ t("sync.trial_active_hint", { time: syncUser.premium_trial_until || '-' }) }}
+                      <div class="secondary-hint" v-if="syncUser && syncUser.plan_tier === 'trial'">
+                        {{ t("sync.trial_active_hint", { time: syncUser.plan_expires_at || syncUser.premium_trial_until || '-' }) }}
                       </div>
-                      <div class="secondary-hint" v-else-if="syncUser && syncUser.is_premium">
+                      <div class="secondary-hint" v-else-if="syncUser && syncUser.plan_tier === 'premium'">
                         {{ t("sync.membership_active_hint", { time: syncUser.plan_expires_at || syncUser.premium_until || '-' }) }}
                       </div>
                       <div class="secondary-hint" v-else-if="syncUser && syncUser.manual_sync_allowed">
@@ -713,8 +713,8 @@
                   <div class="sync-status-metric">
                     <div class="sync-status-metric-label">{{ t("sync.account_rights_title") }}</div>
                     <div class="sync-status-metric-value sync-status-metric-value-wrap">
-                      <span v-if="syncUser && syncUser.is_premium">{{ t("sync.rights_plan_member_title") }}</span>
-                      <span v-else-if="syncUser && syncUser.is_trial_active">{{ t("sync.rights_plan_trial_title") }}</span>
+                      <span v-if="syncUser && syncUser.plan_tier === 'premium'">{{ t("sync.rights_plan_member_title") }}</span>
+                      <span v-else-if="syncUser && syncUser.plan_tier === 'trial'">{{ t("sync.rights_plan_trial_title") }}</span>
                       <span v-else>{{ t("sync.rights_plan_free_title") }}</span>
                     </div>
                   </div>
@@ -837,6 +837,7 @@
                   <div class="sync-auth-field">
                     <label class="secondary-label">{{ t("sync.payment_channel_label") }}</label>
                     <select v-model="syncPaymentChannelInput" class="secondary-input" :disabled="syncBusy || syncFrontendBlocked">
+                      <option value="">{{ t("please_select") }}</option>
                       <option value="alipay">{{ t("sync.payment.alipay") }}</option>
                       <option value="wechat">{{ t("sync.payment.wechat") }}</option>
                     </select>
@@ -855,9 +856,14 @@
                   <div class="secondary-hint">{{ t("sync.payment_claim_review_hint") }}</div>
                   <div class="secondary-hint">{{ t("sync.payment_claim_privacy_hint") }}</div>
                   <div class="secondary-actions">
-                    <button class="about-button" :disabled="syncBusy || syncFrontendBlocked" @click="submitPaymentClaim">
+                    <button
+                      class="about-button"
+                      :disabled="syncBusy || syncFrontendBlocked || !syncPaymentChannelInput"
+                      @click="submitPaymentClaim"
+                    >
                       {{ t("sync.submit_payment_claim_action") }}
                     </button>
+                    <span v-if="!syncPaymentChannelInput" class="secondary-hint">{{ t("sync.payment_channel_required_hint") }}</span>
                   </div>
                   <div v-if="syncUserPaymentClaims && syncUserPaymentClaims.length" class="sync-claim-history">
                     <div class="secondary-label">{{ t("sync.payment_claim_history_title") }}</div>

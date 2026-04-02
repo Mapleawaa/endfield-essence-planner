@@ -3100,23 +3100,64 @@
         color: var(--muted);
       }
 
-      .strategy-notice {
-        margin: 8px 0 12px;
-        padding: 8px 12px;
-        border-radius: 10px;
+      .guide-attributions {
+        margin: 0 0 16px;
+        padding: 12px 14px;
+        border-radius: 12px;
         border: 1px solid var(--stroke);
-        background: var(--panel);
-        color: var(--text);
+        background: rgba(var(--color-black-rgb), var(--alpha-18));
+      }
+
+      .guide-attributions-title {
+        margin-bottom: 8px;
         font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .guide-attributions-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .guide-attribution-item {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: baseline;
+        font-size: 13px;
         line-height: 1.5;
       }
 
-      .strategy-notice a {
+      .guide-attribution-role {
+        color: var(--muted);
+        min-width: 36px;
+      }
+
+      .guide-attribution-item a {
         color: var(--accent);
       }
 
-      .strategy-notice a:hover {
+      .guide-attribution-item a:hover {
         color: var(--text);
+      }
+
+      .guide-attribution-note {
+        color: var(--muted);
+      }
+
+      [data-theme="light"] .guide-attributions {
+        background: rgba(var(--color-white-rgb), var(--alpha-88));
+        border-color: rgba(var(--color-black-rgb), var(--alpha-10));
+        box-shadow: 0 8px 24px rgba(var(--color-black-rgb), var(--alpha-06));
+      }
+
+      [data-theme="light"] .guide-attributions-title,
+      [data-theme="light"] .guide-attribution-role,
+      [data-theme="light"] .guide-attribution-note {
+        color: rgba(var(--color-black-rgb), var(--alpha-58));
       }
 
       .talent-header {

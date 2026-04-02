@@ -37,6 +37,19 @@
     const editorMaterialsDraft = ensureRef("editorMaterialsDraft", {});
     const editorStrategyCategory = ensureRef("editorStrategyCategory", "info");
     const editorStrategyTab = ensureRef("editorStrategyTab", "base");
+    const editorSectionState = ensureRef("editorSectionState", {
+      attributions: true,
+      profile: true,
+      stats: true,
+      materials: false,
+      potentials: false,
+      skills: false,
+      talents: false,
+      baseSkills: false,
+      guideContent: true,
+      equipRows: false,
+      teamSlots: false,
+    });
 
     const editorMaterialLevels = ["elite1", "elite2", "elite3", "elite4"];
     state.editorMaterialLevels = editorMaterialLevels;
@@ -169,7 +182,18 @@
       teamTips: "",
       operationTips: "",
       teamSlots: [],
+      attributions: [],
     });
+
+    const normalizeGuideAttribution = (entry) => {
+      if (!entry || typeof entry !== "object") return null;
+      const role = String(entry.role || "").trim();
+      const name = String(entry.name || "").trim();
+      const url = String(entry.url || "").trim();
+      const note = String(entry.note || "").trim();
+      if (!name && !url && !note) return null;
+      return { role, name, url, note };
+    };
 
     const normalizeGuideEntry = (entry) => {
       if (!entry) return null;
@@ -269,6 +293,12 @@
       if (!Array.isArray(character.guide.teamSlots)) {
         character.guide.teamSlots = [];
       }
+      if (!Array.isArray(character.guide.attributions)) {
+        character.guide.attributions = [];
+      }
+      character.guide.attributions = character.guide.attributions
+        .map((entry) => normalizeGuideAttribution(entry))
+        .filter(Boolean);
       character.guide.teamSlots = character.guide.teamSlots.map((slot) => {
         const target = slot && typeof slot === "object" ? slot : {};
         if (Array.isArray(target.options)) {
@@ -417,6 +447,7 @@
     state.editorCurrentCharacter = editorSelectedCharacter;
     state.editorPickerOpen = editorPickerOpen;
     state.editorIdentityDraft = editorIdentityDraft;
+    state.editorSectionState = editorSectionState;
 
     const editorFilteredCharacters = computed(() => {
       const list = editorCharacters.value || [];
@@ -741,6 +772,75 @@
       }
     };
 
+    state.isEditorSectionExpanded = (key) => !!(editorSectionState.value && editorSectionState.value[key]);
+    state.toggleEditorSection = (key) => {
+      const current = editorSectionState.value || {};
+      editorSectionState.value = {
+        ...current,
+        [key]: !current[key],
+      };
+    };
+
+    const forceEditorSectionReflow = (element) => {
+      if (!element || !element.offsetHeight) return;
+      void element.offsetHeight;
+    };
+
+    state.prepareEditorSectionEnter = (element) => {
+      if (!element || !element.style) return;
+      element.style.height = "0px";
+      element.style.overflow = "hidden";
+      element.style.opacity = "0";
+      element.style.transform = "translateY(-4px)";
+    };
+
+    state.runEditorSectionEnter = (element) => {
+      if (!element || !element.style) return;
+      element.style.display = "grid";
+      element.style.height = "0px";
+      element.style.overflow = "hidden";
+      element.style.opacity = "0";
+      element.style.transform = "translateY(-4px)";
+      forceEditorSectionReflow(element);
+      element.style.height = `${element.scrollHeight}px`;
+      element.style.opacity = "1";
+      element.style.transform = "translateY(0)";
+    };
+
+    state.finishEditorSectionEnter = (element) => {
+      if (!element || !element.style) return;
+      element.style.height = "";
+      element.style.overflow = "";
+      element.style.opacity = "";
+      element.style.transform = "";
+    };
+
+    state.prepareEditorSectionLeave = (element) => {
+      if (!element || !element.style) return;
+      element.style.height = `${element.scrollHeight}px`;
+      element.style.overflow = "hidden";
+      element.style.opacity = "1";
+      element.style.transform = "translateY(0)";
+    };
+
+    state.runEditorSectionLeave = (element) => {
+      if (!element || !element.style) return;
+      element.style.height = `${element.scrollHeight}px`;
+      element.style.overflow = "hidden";
+      forceEditorSectionReflow(element);
+      element.style.height = "0px";
+      element.style.opacity = "0";
+      element.style.transform = "translateY(-4px)";
+    };
+
+    state.finishEditorSectionLeave = (element) => {
+      if (!element || !element.style) return;
+      element.style.height = "";
+      element.style.overflow = "";
+      element.style.opacity = "";
+      element.style.transform = "";
+    };
+
     const syncEditorSelectionByIndex = () => {
       const list = editorCharacters.value || [];
       if (!list.length) {
@@ -803,6 +903,24 @@
       if (!current) return;
       ensureCharacterShape(current);
       current.potentials = Array.isArray(value) ? value : [];
+    };
+
+    state.addEditorGuideAttribution = () => {
+      const current = editorSelectedCharacter.value;
+      if (!current) return;
+      ensureCharacterShape(current);
+      current.guide.attributions.push({
+        role: "",
+        name: "",
+        url: "",
+        note: "",
+      });
+    };
+
+    state.removeEditorGuideAttribution = (index) => {
+      const current = editorSelectedCharacter.value;
+      if (!current || !current.guide || !Array.isArray(current.guide.attributions)) return;
+      current.guide.attributions.splice(index, 1);
     };
 
     state.addEditorPotential = () => {
@@ -1329,7 +1447,6 @@
         weaponType: "",
         mainAbility: "",
         subAbility: "",
-        role: "",
         profession: "",
         stats: buildDefaultStats(),
         skills: [],
@@ -1348,6 +1465,7 @@
           teamTips: "",
           operationTips: "",
           teamSlots: [],
+          attributions: [],
         },
       };
       const list = editorCharacters.value || [];

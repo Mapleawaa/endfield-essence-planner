@@ -1858,13 +1858,14 @@
           method: 'POST',
           body: JSON.stringify({ channel, reference }),
         });
+        state.syncPaymentChannelInput.value = '';
+        state.syncPaymentReferenceInput.value = '';
         const status = result && result.claim && result.claim.status ? String(result.claim.status) : 'pending';
         const notice = createSyncTextEntry(
           status === 'matched_auto' ? 'sync.payment_claim_matched_notice' : 'sync.payment_claim_pending_notice',
           status === 'matched_auto' ? '支付凭证匹配成功，会员已自动开通。' : '支付凭证已提交，等待系统匹配或后台处理。'
         );
         state.syncPaymentClaimNotice.value = resolveSyncEntry(notice).text;
-        state.syncPaymentReferenceInput.value = '';
         await refreshSyncSession(true);
         setSyncNotice(notice, 'info');
         pushSyncToast(
@@ -3110,7 +3111,7 @@
     state.syncVerificationSubmitCooldownSeconds = ref(0);
     state.syncEmailChangeCooldownSeconds = ref(0);
     state.syncResetCodeRequestCooldownSeconds = ref(0);
-    state.syncPaymentChannelInput = ref('alipay');
+    state.syncPaymentChannelInput = ref('');
     state.syncPaymentReferenceInput = ref('');
     state.syncPaymentClaimError = ref('');
     state.syncPaymentClaimNotice = ref('');

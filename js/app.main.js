@@ -2211,6 +2211,9 @@
         get editorStrategyTab() {
           return state.editorStrategyTab;
         },
+        get editorSectionState() {
+          return state.editorSectionState;
+        },
         get editorCurrentCharacter() {
           return state.editorCurrentCharacter;
         },
@@ -2240,6 +2243,30 @@
         },
         get setEditorStrategyTab() {
           return state.setEditorStrategyTab;
+        },
+        get isEditorSectionExpanded() {
+          return state.isEditorSectionExpanded;
+        },
+        get toggleEditorSection() {
+          return state.toggleEditorSection;
+        },
+        get prepareEditorSectionEnter() {
+          return state.prepareEditorSectionEnter;
+        },
+        get runEditorSectionEnter() {
+          return state.runEditorSectionEnter;
+        },
+        get finishEditorSectionEnter() {
+          return state.finishEditorSectionEnter;
+        },
+        get prepareEditorSectionLeave() {
+          return state.prepareEditorSectionLeave;
+        },
+        get runEditorSectionLeave() {
+          return state.runEditorSectionLeave;
+        },
+        get finishEditorSectionLeave() {
+          return state.finishEditorSectionLeave;
         },
         get triggerEditorImport() {
           return state.triggerEditorImport;
@@ -2357,6 +2384,12 @@
         },
         get addEditorPotential() {
           return state.addEditorPotential;
+        },
+        get addEditorGuideAttribution() {
+          return state.addEditorGuideAttribution;
+        },
+        get removeEditorGuideAttribution() {
+          return state.removeEditorGuideAttribution;
         },
         get removeEditorPotential() {
           return state.removeEditorPotential;

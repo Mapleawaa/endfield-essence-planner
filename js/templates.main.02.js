@@ -447,27 +447,6 @@
             </button>
             </div>
             <template v-else>
-            <div class="strategy-notice">
-              <template v-if="locale === 'zh-CN'">
-                感谢
-                <a href="https://space.bilibili.com/209712" target="_blank" rel="noreferrer">
-                  @克劳德的第九艺术世界
-                </a>
-                提供文案支持;部分数据来自
-                <a href="https://warfarin.wiki" target="_blank" rel="noreferrer">
-                  华法琳Wiki
-                </a>
-              </template>
-              <template v-else-if="locale === 'zh-TW'">
-                角色攻略暫無計劃支援其他語言
-              </template>
-              <template v-else-if="locale === 'ja'">
-                キャラクター攻略は他言語の対応予定がありません。
-              </template>
-              <template v-else>
-                Character guides are not planned for other languages.
-              </template>
-            </div>
             <transition name="guide-switch" mode="out-in" @before-leave="guideBeforeLeave" @enter="guideEnter">
               <div v-if="!selectedCharacterId" key="guide-list" class="character-list">
              <div class="panel-title">
@@ -697,7 +676,116 @@
                     请选择一个角色开始编辑。
                   </div>
                   <template v-else>
-                    <div class="editor-grid">
+                    <div class="editor-section">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('attributions')"
+                        @click="toggleEditorSection('attributions')"
+                      >
+                        <span class="editor-section-title">攻略署名</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('attributions') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                        <div v-show="isEditorSectionExpanded('attributions')" class="editor-section-body">
+                          <div class="editor-section-head">
+                            <div></div>
+                            <div class="editor-section-actions">
+                              <button class="ghost-button small" type="button" @click="addEditorGuideAttribution">
+                                新增署名
+                              </button>
+                            </div>
+                          </div>
+                          <div
+                            v-if="!editorSelectedCharacter.guide.attributions || !editorSelectedCharacter.guide.attributions.length"
+                            class="editor-empty"
+                          >
+                            还没有署名条目。
+                          </div>
+                          <div v-else class="editor-card-list">
+                            <div
+                              v-for="(entry, attributionIndex) in editorSelectedCharacter.guide.attributions"
+                              :key="'guide-attribution-' + attributionIndex"
+                              class="editor-card editor-card-plain"
+                            >
+                              <div class="editor-card-head">
+                                <div class="editor-card-title">署名 {{ attributionIndex + 1 }}</div>
+                                <div class="editor-section-actions">
+                                  <button
+                                    class="ghost-button small"
+                                    type="button"
+                                    @click="removeEditorGuideAttribution(attributionIndex)"
+                                  >
+                                    删除
+                                  </button>
+                                </div>
+                              </div>
+                              <div class="editor-grid">
+                                <label class="editor-field">
+                                  <span>类型</span>
+                                  <input
+                                    v-model.trim="entry.role"
+                                    list="editor-guide-attribution-role-options"
+                                    placeholder="作者 / 编辑 / 自定义"
+                                  />
+                                </label>
+                                <label class="editor-field">
+                                  <span>名称</span>
+                                  <input v-model.trim="entry.name" placeholder="署名显示名称" />
+                                </label>
+                                <label class="editor-field editor-field-span-2">
+                                  <span>链接</span>
+                                  <input v-model.trim="entry.url" placeholder="https://example.com" />
+                                </label>
+                              </div>
+                              <label class="editor-field editor-field-block">
+                                <span>备注</span>
+                                <input v-model.trim="entry.note" placeholder="可选，如：首发文案 / 数据校正" />
+                              </label>
+                            </div>
+                          </div>
+                          <datalist id="editor-guide-attribution-role-options">
+                            <option value="作者"></option>
+                            <option value="编辑"></option>
+                            <option value="校对"></option>
+                            <option value="修正"></option>
+                            <option value="数据"></option>
+                            <option value="来源"></option>
+                            <option value="翻译"></option>
+                            <option value="排版"></option>
+                          </datalist>
+                        </div>
+                      </transition>
+                    </div>
+
+                    <div class="editor-section">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('profile')"
+                        @click="toggleEditorSection('profile')"
+                      >
+                        <span class="editor-section-title">角色资料</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('profile') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                      <div v-show="isEditorSectionExpanded('profile')" class="editor-section-body editor-grid">
                       <label class="editor-field">
                         <span>ID</span>
                         <input
@@ -748,10 +836,29 @@
                         <input v-model.trim="editorSelectedCharacter.profession" />
                       </label>
                     </div>
+                      </transition>
+                    </div>
 
                     <div class="editor-section">
-                      <h4>基础属性</h4>
-                      <div class="editor-grid">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('stats')"
+                        @click="toggleEditorSection('stats')"
+                      >
+                        <span class="editor-section-title">基础属性</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('stats') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                      <div v-show="isEditorSectionExpanded('stats')" class="editor-section-body editor-grid">
                         <label class="editor-field">
                           <span>力量</span>
                           <input v-model.trim="editorSelectedCharacter.stats.strength" />
@@ -780,8 +887,25 @@
                     </div>
 
                     <div class="editor-section">
-                      <h4>精英材料（每行一条）</h4>
-                      <div class="editor-materials">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('materials')"
+                        @click="toggleEditorSection('materials')"
+                      >
+                        <span class="editor-section-title">精英材料（每行一条）</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('materials') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                      <div v-show="isEditorSectionExpanded('materials')" class="editor-section-body editor-materials">
                         <div
                           v-for="level in editorMaterialLevels"
                           :key="level"
@@ -800,8 +924,27 @@
                     </div>
 
                     <div class="editor-section">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('potentials')"
+                        @click="toggleEditorSection('potentials')"
+                      >
+                        <span class="editor-section-title">潜能</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('potentials') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                      <div v-show="isEditorSectionExpanded('potentials')" class="editor-section-body">
                       <div class="editor-section-head">
-                        <h4>潜能</h4>
+                        <div></div>
                         <div class="editor-section-actions">
                           <button class="ghost-button small" type="button" @click="addEditorPotential">
                             新增
@@ -863,11 +1006,32 @@
                           </label>
                         </div>
                       </div>
+                      </div>
+                      </transition>
                     </div>
 
                     <div class="editor-section">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('skills')"
+                        @click="toggleEditorSection('skills')"
+                      >
+                        <span class="editor-section-title">技能</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('skills') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                      <div v-show="isEditorSectionExpanded('skills')" class="editor-section-body">
                       <div class="editor-section-head">
-                        <h4>技能</h4>
+                        <div></div>
                         <div class="editor-section-actions">
                           <button class="ghost-button small" type="button" @click="addEditorSkill">
                             新增技能
@@ -1025,11 +1189,32 @@
                         <option value="连携技"></option>
                         <option value="终结技"></option>
                       </datalist>
+                      </div>
+                      </transition>
                     </div>
 
                     <div class="editor-section">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('talents')"
+                        @click="toggleEditorSection('talents')"
+                      >
+                        <span class="editor-section-title">天赋</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('talents') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                      <div v-show="isEditorSectionExpanded('talents')" class="editor-section-body">
                       <div class="editor-section-head">
-                        <h4>天赋</h4>
+                        <div></div>
                         <div class="editor-section-actions">
                           <button class="ghost-button small" type="button" @click="addEditorTalent">
                             新增天赋
@@ -1076,11 +1261,32 @@
                           </label>
                         </div>
                       </div>
+                      </div>
+                      </transition>
                     </div>
 
                     <div class="editor-section">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('baseSkills')"
+                        @click="toggleEditorSection('baseSkills')"
+                      >
+                        <span class="editor-section-title">基建技能</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('baseSkills') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                      <div v-show="isEditorSectionExpanded('baseSkills')" class="editor-section-body">
                       <div class="editor-section-head">
-                        <h4>基建技能</h4>
+                        <div></div>
                         <div class="editor-section-actions">
                           <button class="ghost-button small" type="button" @click="addEditorBaseSkill">
                             新增基建技能
@@ -1127,378 +1333,440 @@
                           </label>
                         </div>
                       </div>
+                      </div>
+                      </transition>
                     </div>
 
                     <div class="editor-section">
-                      <h4>攻略内容</h4>
-                      <div class="editor-guide-grid">
-                        <label class="editor-field editor-field-block">
-                          <span>解析</span>
-                          <textarea v-model.trim="editorSelectedCharacter.guide.analysis" rows="4"></textarea>
-                        </label>
-                        <label class="editor-field editor-field-block">
-                          <span>队伍思路</span>
-                          <textarea v-model.trim="editorSelectedCharacter.guide.teamTips" rows="3"></textarea>
-                        </label>
-                        <label class="editor-field editor-field-block">
-                          <span>操作要点</span>
-                          <textarea v-model.trim="editorSelectedCharacter.guide.operationTips" rows="3"></textarea>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div class="editor-section">
-                      <div class="editor-section-head">
-                        <h4>精炼 / 装备推荐</h4>
-                        <div class="editor-section-actions">
-                          <button class="ghost-button small" type="button" @click="addEditorEquipRow">
-                            新增推荐组
-                          </button>
-                        </div>
-                      </div>
-                      <div
-                        v-if="!editorSelectedCharacter.guide.equipRows || !editorSelectedCharacter.guide.equipRows.length"
-                        class="editor-empty"
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('guideContent')"
+                        @click="toggleEditorSection('guideContent')"
                       >
-                        还没有推荐组。
-                      </div>
-                      <div v-else class="editor-card-list">
-                        <div
-                          v-for="(row, rowIndex) in editorSelectedCharacter.guide.equipRows"
-                          :key="'equip-row-' + rowIndex"
-                          class="editor-card"
-                        >
-                          <div class="editor-card-head">
-                            <div class="editor-card-title">推荐组 {{ rowIndex + 1 }}</div>
+                        <span class="editor-section-title">攻略内容</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('guideContent') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                        <div v-show="isEditorSectionExpanded('guideContent')" class="editor-section-body editor-guide-grid">
+                          <label class="editor-field editor-field-block">
+                            <span>解析</span>
+                            <textarea v-model.trim="editorSelectedCharacter.guide.analysis" rows="4"></textarea>
+                          </label>
+                          <label class="editor-field editor-field-block">
+                            <span>队伍思路</span>
+                            <textarea v-model.trim="editorSelectedCharacter.guide.teamTips" rows="3"></textarea>
+                          </label>
+                          <label class="editor-field editor-field-block">
+                            <span>操作要点</span>
+                            <textarea v-model.trim="editorSelectedCharacter.guide.operationTips" rows="3"></textarea>
+                          </label>
+                        </div>
+                      </transition>
+                    </div>
+
+                    <div class="editor-section">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('equipRows')"
+                        @click="toggleEditorSection('equipRows')"
+                      >
+                        <span class="editor-section-title">精炼 / 装备推荐</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('equipRows') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                        <div v-show="isEditorSectionExpanded('equipRows')" class="editor-section-body">
+                          <div class="editor-section-head">
+                            <div></div>
                             <div class="editor-section-actions">
-                              <button
-                                class="ghost-button small"
-                                type="button"
-                                @click="removeEditorEquipRow(rowIndex)"
-                              >
-                                删除
+                              <button class="ghost-button small" type="button" @click="addEditorEquipRow">
+                                新增推荐组
                               </button>
                             </div>
                           </div>
-                          <div class="editor-subsection">
-                            <div class="editor-section-head">
-                              <h5>武器</h5>
-                              <div class="editor-section-actions">
-                                <button
-                                  class="ghost-button small"
-                                  type="button"
-                                  @click="addEditorEquipWeapon(rowIndex)"
-                                >
-                                  新增武器
-                                </button>
+                          <div
+                            v-if="!editorSelectedCharacter.guide.equipRows || !editorSelectedCharacter.guide.equipRows.length"
+                            class="editor-empty"
+                          >
+                            还没有推荐组。
+                          </div>
+                          <div v-else class="editor-card-list">
+                            <div
+                              v-for="(row, rowIndex) in editorSelectedCharacter.guide.equipRows"
+                              :key="'equip-row-' + rowIndex"
+                              class="editor-card"
+                            >
+                              <div class="editor-card-head">
+                                <div class="editor-card-title">推荐组 {{ rowIndex + 1 }}</div>
+                                <div class="editor-section-actions">
+                                  <button
+                                    class="ghost-button small"
+                                    type="button"
+                                    @click="removeEditorEquipRow(rowIndex)"
+                                  >
+                                    删除
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                            <div v-if="!row.weapons || !row.weapons.length" class="editor-empty">
-                              暂无武器。
-                            </div>
-                            <div v-else class="editor-card-list editor-card-list-inline">
-                              <div
-                                v-for="(weapon, wIndex) in row.weapons"
-                                :key="'equip-weapon-' + rowIndex + '-' + wIndex"
-                                class="editor-card editor-card-plain"
-                              >
-                                <div class="editor-card-head">
-                                  <div class="editor-card-title">武器 {{ wIndex + 1 }}</div>
+                              <div class="editor-subsection">
+                                <div class="editor-section-head">
+                                  <h5>武器</h5>
                                   <div class="editor-section-actions">
                                     <button
                                       class="ghost-button small"
                                       type="button"
-                                      @click="removeEditorEquipWeapon(rowIndex, wIndex)"
+                                      @click="addEditorEquipWeapon(rowIndex)"
                                     >
-                                      删除
+                                      新增武器
                                     </button>
                                   </div>
                                 </div>
-                                <div class="editor-grid">
-                                  <label class="editor-field">
-                                    <span>名称</span>
-                                    <input v-model.trim="weapon.name" placeholder="武器名称" />
-                                  </label>
-                                  <label class="editor-field">
-                                    <span>图标（可选）</span>
-                                    <input v-model.trim="weapon.icon" placeholder="image/weapons/xxx.avif" />
-                                  </label>
-                                  <label class="editor-field">
-                                    <span>备注</span>
-                                    <input v-model.trim="weapon.note" placeholder="可选" />
-                                  </label>
-                                  <label class="editor-field">
-                                    <span>稀有度</span>
-                                    <input type="number" min="1" max="6" v-model.number="weapon.rarity" />
-                                  </label>
+                                <div v-if="!row.weapons || !row.weapons.length" class="editor-empty">
+                                  暂无武器。
                                 </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="editor-subsection">
-                            <div class="editor-section-head">
-                              <h5>装备</h5>
-                            </div>
-                            <div class="editor-equip-grid">
-                              <div
-                                v-for="slotIndex in 4"
-                                :key="'equip-slot-' + rowIndex + '-' + slotIndex"
-                                class="editor-card editor-card-plain"
-                              >
-                                <div class="editor-card-head">
-                                  <div class="editor-card-title">槽 {{ slotIndex }}</div>
-                                  <div class="editor-section-actions">
-                                    <button
-                                      class="ghost-button small"
-                                      type="button"
-                                      @click="clearEditorEquipSlot(row, slotIndex - 1)"
-                                    >
-                                      清空
-                                    </button>
-                                  </div>
-                                </div>
-                                <div class="editor-grid">
-                                  <label class="editor-field">
-                                    <span>名称</span>
-                                    <input
-                                      :value="getEditorEquipSlotValue(row, slotIndex - 1, 'name')"
-                                      @input="updateEditorEquipSlotField(row, slotIndex - 1, 'name', $event.target.value)"
-                                      placeholder="装备名称"
-                                    />
-                                  </label>
-                                  <label class="editor-field">
-                                    <span>图标（可选）</span>
-                                    <input
-                                      :value="getEditorEquipSlotValue(row, slotIndex - 1, 'icon')"
-                                      @input="updateEditorEquipSlotField(row, slotIndex - 1, 'icon', $event.target.value)"
-                                      placeholder="image/equip/xxx.avif"
-                                    />
-                                  </label>
-                                  <label class="editor-field">
-                                    <span>备注</span>
-                                    <input
-                                      :value="getEditorEquipSlotValue(row, slotIndex - 1, 'note')"
-                                      @input="updateEditorEquipSlotField(row, slotIndex - 1, 'note', $event.target.value)"
-                                      placeholder="可选"
-                                    />
-                                  </label>
-                                  <label class="editor-field">
-                                    <span>稀有度</span>
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      max="6"
-                                      :value="getEditorEquipSlotValue(row, slotIndex - 1, 'rarity')"
-                                      @input="updateEditorEquipSlotField(row, slotIndex - 1, 'rarity', $event.target.value)"
-                                    />
-                                  </label>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="editor-section">
-                      <div class="editor-section-head">
-                        <h4>队伍搭配</h4>
-                        <div class="editor-section-actions">
-                          <button class="ghost-button small" type="button" @click="addEditorTeamSlot">
-                            新增栏位
-                          </button>
-                        </div>
-                      </div>
-                      <div
-                        v-if="!editorSelectedCharacter.guide.teamSlots || !editorSelectedCharacter.guide.teamSlots.length"
-                        class="editor-empty"
-                      >
-                        还没有队伍栏位。
-                      </div>
-                      <div v-else class="editor-card-list">
-                        <div
-                          v-for="(slot, slotIndex) in editorSelectedCharacter.guide.teamSlots"
-                          :key="'team-slot-' + slotIndex"
-                          class="editor-card"
-                        >
-                          <div class="editor-card-head">
-                            <div class="editor-card-title">栏位 {{ slotIndex + 1 }}</div>
-                            <div class="editor-section-actions">
-                              <button
-                                class="ghost-button small"
-                                type="button"
-                                @click="removeEditorTeamSlot(slotIndex)"
-                              >
-                                删除
-                              </button>
-                            </div>
-                          </div>
-                          <div class="editor-grid">
-                            <label class="editor-field">
-                              <span>默认角色名</span>
-                              <input v-model.trim="slot.name" placeholder="可留空" />
-                            </label>
-                            <label class="editor-field">
-                              <span>说明</span>
-                              <input v-model.trim="slot.note" placeholder="可选" />
-                            </label>
-                          </div>
-                          <div class="editor-subsection">
-                            <div class="editor-section-head">
-                              <h5>候选角色</h5>
-                              <div class="editor-section-actions">
-                                <button
-                                  class="ghost-button small"
-                                  type="button"
-                                  @click="addEditorTeamOption(slotIndex)"
-                                >
-                                  新增候选
-                                </button>
-                              </div>
-                            </div>
-                            <div v-if="!slot.options || !slot.options.length" class="editor-empty">
-                              暂无候选角色。
-                            </div>
-                            <div v-else class="editor-card-list">
-                              <div
-                                v-for="(option, optionIndex) in slot.options"
-                                :key="'team-option-' + slotIndex + '-' + optionIndex"
-                                class="editor-card editor-card-soft"
-                              >
-                                <div class="editor-card-head">
-                                  <div class="editor-card-title">候选 {{ optionIndex + 1 }}</div>
-                                  <div class="editor-section-actions">
-                                    <button
-                                      class="ghost-button small"
-                                      type="button"
-                                      @click="removeEditorTeamOption(slotIndex, optionIndex)"
-                                    >
-                                      删除
-                                    </button>
-                                  </div>
-                                </div>
-                                <div class="editor-grid">
-                                  <label class="editor-field">
-                                    <span>名称</span>
-                                    <input v-model.trim="option.name" placeholder="角色名称" />
-                                  </label>
-                                  <label class="editor-field">
-                                    <span>标签</span>
-                                    <input v-model.trim="option.tag" placeholder="如：副C / 备选" />
-                                  </label>
-                                </div>
-                                <div class="editor-subsection">
-                                  <div class="editor-section-head">
-                                    <h5>武器</h5>
-                                    <div class="editor-section-actions">
-                                      <button
-                                        class="ghost-button small"
-                                        type="button"
-                                        @click="addEditorTeamWeapon(slotIndex, optionIndex)"
-                                      >
-                                        新增武器
-                                      </button>
+                                <div v-else class="editor-card-list editor-card-list-inline">
+                                  <div
+                                    v-for="(weapon, wIndex) in row.weapons"
+                                    :key="'equip-weapon-' + rowIndex + '-' + wIndex"
+                                    class="editor-card editor-card-plain"
+                                  >
+                                    <div class="editor-card-head">
+                                      <div class="editor-card-title">武器 {{ wIndex + 1 }}</div>
+                                      <div class="editor-section-actions">
+                                        <button
+                                          class="ghost-button small"
+                                          type="button"
+                                          @click="removeEditorEquipWeapon(rowIndex, wIndex)"
+                                        >
+                                          删除
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div class="editor-grid">
+                                      <label class="editor-field">
+                                        <span>名称</span>
+                                        <input v-model.trim="weapon.name" placeholder="武器名称" />
+                                      </label>
+                                      <label class="editor-field">
+                                        <span>图标（可选）</span>
+                                        <input v-model.trim="weapon.icon" placeholder="image/weapons/xxx.avif" />
+                                      </label>
+                                      <label class="editor-field">
+                                        <span>备注</span>
+                                        <input v-model.trim="weapon.note" placeholder="可选" />
+                                      </label>
+                                      <label class="editor-field">
+                                        <span>稀有度</span>
+                                        <input type="number" min="1" max="6" v-model.number="weapon.rarity" />
+                                      </label>
                                     </div>
                                   </div>
+                                </div>
+                              </div>
+                              <div class="editor-subsection">
+                                <div class="editor-section-head">
+                                  <h5>装备</h5>
+                                </div>
+                                <div class="editor-equip-grid">
                                   <div
-                                    v-if="!option.weapons || !option.weapons.length"
-                                    class="editor-empty"
+                                    v-for="slotIndex in 4"
+                                    :key="'equip-slot-' + rowIndex + '-' + slotIndex"
+                                    class="editor-card editor-card-plain"
                                   >
-                                    暂无武器。
+                                    <div class="editor-card-head">
+                                      <div class="editor-card-title">槽 {{ slotIndex }}</div>
+                                      <div class="editor-section-actions">
+                                        <button
+                                          class="ghost-button small"
+                                          type="button"
+                                          @click="clearEditorEquipSlot(row, slotIndex - 1)"
+                                        >
+                                          清空
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div class="editor-grid">
+                                      <label class="editor-field">
+                                        <span>名称</span>
+                                        <input
+                                          :value="getEditorEquipSlotValue(row, slotIndex - 1, 'name')"
+                                          @input="updateEditorEquipSlotField(row, slotIndex - 1, 'name', $event.target.value)"
+                                          placeholder="装备名称"
+                                        />
+                                      </label>
+                                      <label class="editor-field">
+                                        <span>图标（可选）</span>
+                                        <input
+                                          :value="getEditorEquipSlotValue(row, slotIndex - 1, 'icon')"
+                                          @input="updateEditorEquipSlotField(row, slotIndex - 1, 'icon', $event.target.value)"
+                                          placeholder="image/equip/xxx.avif"
+                                        />
+                                      </label>
+                                      <label class="editor-field">
+                                        <span>备注</span>
+                                        <input
+                                          :value="getEditorEquipSlotValue(row, slotIndex - 1, 'note')"
+                                          @input="updateEditorEquipSlotField(row, slotIndex - 1, 'note', $event.target.value)"
+                                          placeholder="可选"
+                                        />
+                                      </label>
+                                      <label class="editor-field">
+                                        <span>稀有度</span>
+                                        <input
+                                          type="number"
+                                          min="1"
+                                          max="6"
+                                          :value="getEditorEquipSlotValue(row, slotIndex - 1, 'rarity')"
+                                          @input="updateEditorEquipSlotField(row, slotIndex - 1, 'rarity', $event.target.value)"
+                                        />
+                                      </label>
+                                    </div>
                                   </div>
-                                  <div v-else class="editor-card-list editor-card-list-inline">
-                                    <div
-                                      v-for="(weapon, wIndex) in option.weapons"
-                                      :key="'team-weapon-' + slotIndex + '-' + optionIndex + '-' + wIndex"
-                                      class="editor-card editor-card-plain"
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </transition>
+                    </div>
+
+                    <div class="editor-section">
+                      <button
+                        type="button"
+                        class="editor-section-toggle"
+                        :aria-expanded="isEditorSectionExpanded('teamSlots')"
+                        @click="toggleEditorSection('teamSlots')"
+                      >
+                        <span class="editor-section-title">队伍搭配</span>
+                        <span class="editor-section-chevron" :class="{ 'is-open': isEditorSectionExpanded('teamSlots') }" aria-hidden="true">&gt;</span>
+                      </button>
+                      <transition
+                        name="editor-section-collapse"
+                        @before-enter="prepareEditorSectionEnter"
+                        @enter="runEditorSectionEnter"
+                        @after-enter="finishEditorSectionEnter"
+                        @before-leave="prepareEditorSectionLeave"
+                        @leave="runEditorSectionLeave"
+                        @after-leave="finishEditorSectionLeave"
+                      >
+                        <div v-show="isEditorSectionExpanded('teamSlots')" class="editor-section-body">
+                          <div class="editor-section-head">
+                            <div></div>
+                            <div class="editor-section-actions">
+                              <button class="ghost-button small" type="button" @click="addEditorTeamSlot">
+                                新增栏位
+                              </button>
+                            </div>
+                          </div>
+                          <div
+                            v-if="!editorSelectedCharacter.guide.teamSlots || !editorSelectedCharacter.guide.teamSlots.length"
+                            class="editor-empty"
+                          >
+                            还没有队伍栏位。
+                          </div>
+                          <div v-else class="editor-card-list">
+                            <div
+                              v-for="(slot, slotIndex) in editorSelectedCharacter.guide.teamSlots"
+                              :key="'team-slot-' + slotIndex"
+                              class="editor-card"
+                            >
+                              <div class="editor-card-head">
+                                <div class="editor-card-title">栏位 {{ slotIndex + 1 }}</div>
+                                <div class="editor-section-actions">
+                                  <button
+                                    class="ghost-button small"
+                                    type="button"
+                                    @click="removeEditorTeamSlot(slotIndex)"
+                                  >
+                                    删除
+                                  </button>
+                                </div>
+                              </div>
+                              <div class="editor-grid">
+                                <label class="editor-field">
+                                  <span>默认角色名</span>
+                                  <input v-model.trim="slot.name" placeholder="可留空" />
+                                </label>
+                                <label class="editor-field">
+                                  <span>说明</span>
+                                  <input v-model.trim="slot.note" placeholder="可选" />
+                                </label>
+                              </div>
+                              <div class="editor-subsection">
+                                <div class="editor-section-head">
+                                  <h5>候选角色</h5>
+                                  <div class="editor-section-actions">
+                                    <button
+                                      class="ghost-button small"
+                                      type="button"
+                                      @click="addEditorTeamOption(slotIndex)"
                                     >
-                                      <div class="editor-card-head">
-                                        <div class="editor-card-title">武器 {{ wIndex + 1 }}</div>
+                                      新增候选
+                                    </button>
+                                  </div>
+                                </div>
+                                <div v-if="!slot.options || !slot.options.length" class="editor-empty">
+                                  暂无候选角色。
+                                </div>
+                                <div v-else class="editor-card-list">
+                                  <div
+                                    v-for="(option, optionIndex) in slot.options"
+                                    :key="'team-option-' + slotIndex + '-' + optionIndex"
+                                    class="editor-card editor-card-soft"
+                                  >
+                                    <div class="editor-card-head">
+                                      <div class="editor-card-title">候选 {{ optionIndex + 1 }}</div>
+                                      <div class="editor-section-actions">
+                                        <button
+                                          class="ghost-button small"
+                                          type="button"
+                                          @click="removeEditorTeamOption(slotIndex, optionIndex)"
+                                        >
+                                          删除
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div class="editor-grid">
+                                      <label class="editor-field">
+                                        <span>名称</span>
+                                        <input v-model.trim="option.name" placeholder="角色名称" />
+                                      </label>
+                                      <label class="editor-field">
+                                        <span>标签</span>
+                                        <input v-model.trim="option.tag" placeholder="如：副C / 备选" />
+                                      </label>
+                                    </div>
+                                    <div class="editor-subsection">
+                                      <div class="editor-section-head">
+                                        <h5>武器</h5>
                                         <div class="editor-section-actions">
                                           <button
                                             class="ghost-button small"
                                             type="button"
-                                            @click="removeEditorTeamWeapon(slotIndex, optionIndex, wIndex)"
+                                            @click="addEditorTeamWeapon(slotIndex, optionIndex)"
                                           >
-                                            删除
+                                            新增武器
                                           </button>
                                         </div>
                                       </div>
-                                      <div class="editor-grid">
-                                        <label class="editor-field">
-                                          <span>名称</span>
-                                          <input v-model.trim="weapon.name" placeholder="武器名称" />
-                                        </label>
-                                        <label class="editor-field">
-                                          <span>图标（可选）</span>
-                                          <input v-model.trim="weapon.icon" placeholder="image/weapons/xxx.avif" />
-                                        </label>
-                                        <label class="editor-field">
-                                          <span>备注</span>
-                                          <input v-model.trim="weapon.note" placeholder="可选" />
-                                        </label>
-                                        <label class="editor-field">
-                                          <span>稀有度</span>
-                                          <input type="number" min="1" max="6" v-model.number="weapon.rarity" />
-                                        </label>
+                                      <div
+                                        v-if="!option.weapons || !option.weapons.length"
+                                        class="editor-empty"
+                                      >
+                                        暂无武器。
+                                      </div>
+                                      <div v-else class="editor-card-list editor-card-list-inline">
+                                        <div
+                                          v-for="(weapon, wIndex) in option.weapons"
+                                          :key="'team-weapon-' + slotIndex + '-' + optionIndex + '-' + wIndex"
+                                          class="editor-card editor-card-plain"
+                                        >
+                                          <div class="editor-card-head">
+                                            <div class="editor-card-title">武器 {{ wIndex + 1 }}</div>
+                                            <div class="editor-section-actions">
+                                              <button
+                                                class="ghost-button small"
+                                                type="button"
+                                                @click="removeEditorTeamWeapon(slotIndex, optionIndex, wIndex)"
+                                              >
+                                                删除
+                                              </button>
+                                            </div>
+                                          </div>
+                                          <div class="editor-grid">
+                                            <label class="editor-field">
+                                              <span>名称</span>
+                                              <input v-model.trim="weapon.name" placeholder="武器名称" />
+                                            </label>
+                                            <label class="editor-field">
+                                              <span>图标（可选）</span>
+                                              <input v-model.trim="weapon.icon" placeholder="image/weapons/xxx.avif" />
+                                            </label>
+                                            <label class="editor-field">
+                                              <span>备注</span>
+                                              <input v-model.trim="weapon.note" placeholder="可选" />
+                                            </label>
+                                            <label class="editor-field">
+                                              <span>稀有度</span>
+                                              <input type="number" min="1" max="6" v-model.number="weapon.rarity" />
+                                            </label>
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </div>
-                                <div class="editor-subsection">
-                                  <div class="editor-section-head">
-                                    <h5>装备</h5>
-                                    <div class="editor-section-actions">
-                                      <button
-                                        class="ghost-button small"
-                                        type="button"
-                                        @click="addEditorTeamEquip(slotIndex, optionIndex)"
-                                      >
-                                        新增装备
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <div
-                                    v-if="!option.equipment || !option.equipment.length"
-                                    class="editor-empty"
-                                  >
-                                    暂无装备。
-                                  </div>
-                                  <div v-else class="editor-card-list editor-card-list-inline">
-                                    <div
-                                      v-for="(equip, eIndex) in option.equipment"
-                                      :key="'team-equip-' + slotIndex + '-' + optionIndex + '-' + eIndex"
-                                      class="editor-card editor-card-plain"
-                                    >
-                                      <div class="editor-card-head">
-                                        <div class="editor-card-title">装备 {{ eIndex + 1 }}</div>
+                                    <div class="editor-subsection">
+                                      <div class="editor-section-head">
+                                        <h5>装备</h5>
                                         <div class="editor-section-actions">
                                           <button
                                             class="ghost-button small"
                                             type="button"
-                                            @click="removeEditorTeamEquip(slotIndex, optionIndex, eIndex)"
+                                            @click="addEditorTeamEquip(slotIndex, optionIndex)"
                                           >
-                                            删除
+                                            新增装备
                                           </button>
                                         </div>
                                       </div>
-                                      <div class="editor-grid">
-                                        <label class="editor-field">
-                                          <span>名称</span>
-                                          <input v-model.trim="equip.name" placeholder="装备名称" />
-                                        </label>
-                                        <label class="editor-field">
-                                          <span>图标（可选）</span>
-                                          <input v-model.trim="equip.icon" placeholder="image/equip/xxx.avif" />
-                                        </label>
-                                        <label class="editor-field">
-                                          <span>备注</span>
-                                          <input v-model.trim="equip.note" placeholder="可选" />
-                                        </label>
-                                        <label class="editor-field">
-                                          <span>稀有度</span>
-                                          <input type="number" min="1" max="6" v-model.number="equip.rarity" />
-                                        </label>
+                                      <div
+                                        v-if="!option.equipment || !option.equipment.length"
+                                        class="editor-empty"
+                                      >
+                                        暂无装备。
+                                      </div>
+                                      <div v-else class="editor-card-list editor-card-list-inline">
+                                        <div
+                                          v-for="(equip, eIndex) in option.equipment"
+                                          :key="'team-equip-' + slotIndex + '-' + optionIndex + '-' + eIndex"
+                                          class="editor-card editor-card-plain"
+                                        >
+                                          <div class="editor-card-head">
+                                            <div class="editor-card-title">装备 {{ eIndex + 1 }}</div>
+                                            <div class="editor-section-actions">
+                                              <button
+                                                class="ghost-button small"
+                                                type="button"
+                                                @click="removeEditorTeamEquip(slotIndex, optionIndex, eIndex)"
+                                              >
+                                                删除
+                                              </button>
+                                            </div>
+                                          </div>
+                                          <div class="editor-grid">
+                                            <label class="editor-field">
+                                              <span>名称</span>
+                                              <input v-model.trim="equip.name" placeholder="装备名称" />
+                                            </label>
+                                            <label class="editor-field">
+                                              <span>图标（可选）</span>
+                                              <input v-model.trim="equip.icon" placeholder="image/equip/xxx.avif" />
+                                            </label>
+                                            <label class="editor-field">
+                                              <span>备注</span>
+                                              <input v-model.trim="equip.note" placeholder="可选" />
+                                            </label>
+                                            <label class="editor-field">
+                                              <span>稀有度</span>
+                                              <input type="number" min="1" max="6" v-model.number="equip.rarity" />
+                                            </label>
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -1507,7 +1775,7 @@
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </transition>
                     </div>
                   </template>
                 </section>

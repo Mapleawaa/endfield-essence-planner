@@ -3,6 +3,29 @@
   window.__APP_TEMPLATES.strategyGuideDetail = `
           <div class="character-detail">
             <div class="detail-content" v-if="currentCharacter">
+              <div
+                v-if="currentGuide && Array.isArray(currentGuide.attributions) && currentGuide.attributions.length"
+                class="guide-attributions"
+              >
+                <div class="guide-attributions-title">攻略署名</div>
+                <div class="guide-attributions-list">
+                  <div
+                    v-for="(entry, attributionIndex) in currentGuide.attributions"
+                    :key="'guide-attribution-' + attributionIndex"
+                    class="guide-attribution-item"
+                  >
+                    <span class="guide-attribution-role">{{ entry.role || '署名' }}</span>
+                    <template v-if="entry.url">
+                      <a :href="entry.url" target="_blank" rel="noreferrer">{{ entry.name || entry.url }}</a>
+                    </template>
+                    <template v-else>
+                      <span>{{ entry.name || '-' }}</span>
+                    </template>
+                    <span v-if="entry.note" class="guide-attribution-note">{{ entry.note }}</span>
+                  </div>
+                </div>
+              </div>
+
               <div class="character-hero">
                 <div class="hero-left">
                   <button v-if="showBackButton" class="ghost-button back-button hero-back" @click="backToCharacterList">
@@ -43,7 +66,7 @@
                     </div>
                     <div class="hero-meta-pair">
                       <span class="meta-label">{{ t("plan.item_6") }}</span>
-                      <span class="meta-value">{{ currentCharacter.profession || currentCharacter.role || "-" }}</span>
+                      <span class="meta-value">{{ currentCharacter.profession || "-" }}</span>
                     </div>
                   </div>
                 </div>

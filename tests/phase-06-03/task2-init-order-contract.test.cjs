@@ -26,7 +26,6 @@ assert.deepEqual(
     "initUpSchedule",
     "initRerunRanking",
     "initStorage",
-    "initAnalytics",
     "initEmbed",
     "initPerf",
     "initBackground",

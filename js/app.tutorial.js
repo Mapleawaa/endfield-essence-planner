@@ -269,11 +269,6 @@
 
     const toggleTutorialEssenceOwned = () => {
       tutorialEssenceOwned.value = !tutorialEssenceOwned.value;
-      if (tutorialEssenceOwned.value) {
-        state.trackEvent("weapon_mark_essence_owned", { weapon: tutorialWeapon.name, tutorial: true });
-      } else {
-        state.trackEvent("weapon_mark_essence_pending", { weapon: tutorialWeapon.name, tutorial: true });
-      }
     };
 
     const markTutorialNoteTouched = () => {

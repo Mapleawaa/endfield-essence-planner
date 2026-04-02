@@ -563,19 +563,10 @@
     };
     reportWeaponDataIntegrityWarning(dataIntegrityWeaponAttrRows.value);
 
-    const defaultTrackEvent = (name, data) => {
-      if (typeof window === "undefined") return;
-      if (window.umami && typeof window.umami.track === "function") {
-        window.umami.track(name, data);
-      }
-    };
-    const trackEvent = typeof state.trackEvent === "function" ? state.trackEvent : defaultTrackEvent;
-
     const setWeaponOwned = (weapon, owned) => {
       if (!weapon || !weapon.name) return;
       const nextOwned = Boolean(owned);
       setWeaponMark(weapon.name, { weaponOwned: nextOwned });
-      trackEvent(nextOwned ? "weapon_mark_owned" : "weapon_mark_unowned", { weapon: weapon.name });
     };
 
     const toggleWeaponOwned = (weapon) => {
@@ -588,9 +579,6 @@
       if (!weapon || !weapon.name) return;
       const nextOwned = Boolean(owned);
       setWeaponMark(weapon.name, { essenceOwned: nextOwned });
-      trackEvent(nextOwned ? "weapon_mark_essence_owned" : "weapon_mark_essence_pending", {
-        weapon: weapon.name,
-      });
     };
 
     const toggleEssenceOwned = (weapon) => {
@@ -884,21 +872,14 @@
     const pendingCount = computed(() => pendingSelectedWeapons.value.length);
     const selectedNameSet = computed(() => new Set(state.selectedNames.value));
 
-    const toggleWeapon = (weapon, source = "grid") => {
+    const toggleWeapon = (weapon) => {
       if (!weapon || !weapon.name) return;
       const index = state.selectedNames.value.indexOf(weapon.name);
-      const action = index === -1 ? "select" : "deselect";
       if (index === -1) {
         state.selectedNames.value.push(weapon.name);
       } else {
         state.selectedNames.value.splice(index, 1);
       }
-
-      trackEvent("weapon_click", {
-        weapon: weapon.name,
-        action,
-        source,
-      });
     };
 
     const toggleShowWeaponAttrs = () => {
@@ -1199,7 +1180,6 @@
       const next = new Set(state.selectedNames.value);
       rows.forEach((weapon) => next.add(weapon.name));
       state.selectedNames.value = Array.from(next);
-      trackEvent("weapon_select_all", { count: rows.length });
     };
 
     watch(
@@ -1344,7 +1324,6 @@
     state.getSelectorHiddenReason = getSelectorHiddenReason;
     state.allFilteredSelected = allFilteredSelected;
     state.selectAllWeapons = selectAllWeapons;
-    state.trackEvent = trackEvent;
     state.dismissAttrHint = dismissAttrHint;
   };
 })();

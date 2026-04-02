@@ -166,6 +166,39 @@
     return pending;
   };
 
+  const scheduleBackgroundAnalyticsBootstrap = () => {
+    if (typeof window === "undefined") return;
+    if (window.__APP_BACKGROUND_ANALYTICS_BOOTSTRAP_SCHEDULED__) return;
+    window.__APP_BACKGROUND_ANALYTICS_BOOTSTRAP_SCHEDULED__ = true;
+
+    const inject = () => {
+      loadScriptOnce("./js/analytics.bootstrap.js").catch(() => {
+        // Analytics is intentionally best-effort and must stay silent.
+      });
+    };
+
+    const schedule = () => {
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(inject, { timeout: 4000 });
+        return;
+      }
+      setTimeout(inject, 1200);
+    };
+
+    if (document.readyState === "complete") {
+      schedule();
+      return;
+    }
+
+    window.addEventListener(
+      "load",
+      () => {
+        schedule();
+      },
+      { once: true }
+    );
+  };
+
   const createUiScheduler = (updateFn) => () => {
     if (typeof window === "undefined") return;
     const run = () => updateFn();
@@ -586,6 +619,7 @@
       state.formatMarkdownBlocks = formatMarkdownBlocks;
       state.loadScriptOnce = loadScriptOnce;
       state.createUiScheduler = createUiScheduler;
+      scheduleBackgroundAnalyticsBootstrap();
       const runtimeEnv = readRuntimeEnv();
       if (typeof window !== "undefined") {
         window.__APP_RUNTIME_ENV__ = runtimeEnv;
@@ -848,7 +882,6 @@
         "initUpSchedule",
         "initRerunRanking",
         "initStorage",
-        "initAnalytics",
         "initEmbed",
         "initPerf",
         "initBackground",
@@ -1142,34 +1175,6 @@
         return query ? `?${query}` : "";
       };
 
-      const buildAnalyticsPath = () => {
-        const view = state.currentView.value;
-        if (view === "strategy") {
-          const id =
-            state.selectedCharacterId && state.selectedCharacterId.value
-              ? state.selectedCharacterId.value
-              : pendingStrategyCharacterId || "";
-          if (id) return `/strategy/${encodeURIComponent(id)}`;
-          return "/strategy";
-        }
-        if (view === "editor") {
-          return "/editor";
-        }
-        if (view === "equip-refining") {
-          return "/equip-refining";
-        }
-        if (view === "rerun-ranking") {
-          return "/rerun-ranking";
-        }
-        if (view === "match") {
-          return "/match";
-        }
-        if (view === "background") {
-          return "/background";
-        }
-        return "/planner";
-      };
-
       const legacyScrollbarHiddenViews = new Set([
         "planner",
         "match",
@@ -1184,30 +1189,6 @@
         const root = document.documentElement;
         const currentView = String(state.currentView.value || "planner");
         root.classList.toggle("legacy-scrollbar-hidden", legacyScrollbarHiddenViews.has(currentView));
-      };
-
-      const buildAnalyticsUrl = () => {
-        if (typeof window === "undefined") return "";
-        const pathname = window.location.pathname || "";
-        const base = pathname.endsWith("/")
-          ? pathname.slice(0, -1)
-          : pathname.endsWith(".html")
-          ? pathname.replace(/\/[^/]*$/, "")
-          : pathname;
-        const path = buildAnalyticsPath();
-        if (!base) return path;
-        return `${base}${path}`;
-      };
-
-      const trackPageview = () => {
-        if (typeof state.trackPageview !== "function") return;
-        if (typeof window === "undefined") return;
-        state.trackPageview({
-          url: buildAnalyticsUrl(),
-          path: buildAnalyticsPath(),
-          view: state.currentView.value,
-          title: document.title,
-        });
       };
 
       const resizeNoteTextarea = (event) => {
@@ -1246,7 +1227,6 @@
       const onPopState = () => {
         applyRoute(parseRoute());
         syncLegacyScrollbarMode();
-        trackPageview();
       };
 
       onMounted(() => {
@@ -1254,7 +1234,6 @@
         applyRoute(route);
         syncLegacyScrollbarMode();
         syncQuery(true);
-        trackPageview();
         if (typeof window !== "undefined") {
           window.addEventListener("popstate", onPopState);
         }
@@ -1281,7 +1260,6 @@
       watch([state.currentView, () => (state.selectedCharacterId ? state.selectedCharacterId.value : null)], () => {
         syncLegacyScrollbarMode();
         syncQuery(false);
-        trackPageview();
       });
 
       watch(

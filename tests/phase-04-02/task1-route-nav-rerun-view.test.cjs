@@ -26,14 +26,7 @@ assert.match(
   "parseRoute should map ?view=rerun-ranking to rerun-ranking route"
 );
 
-const buildAnalyticsPathBody = extractConstArrowBody(appMainSource, "buildAnalyticsPath");
-assert.match(
-  buildAnalyticsPathBody,
-  /if\s*\(\s*view\s*===\s*['"]rerun-ranking['"]\s*\)\s*\{[\s\S]*?return\s*['"]\/rerun-ranking['"];?/,
-  "buildAnalyticsPath should emit /rerun-ranking for rerun ranking page"
-);
-
-const declarationOrder = ["parseRoute", "buildAnalyticsPath", "legacyScrollbarHiddenViews", "onPopState"].map(
+const declarationOrder = ["parseRoute", "legacyScrollbarHiddenViews", "onPopState"].map(
   (name) => {
     const match = new RegExp(`const\\s+${name}\\s*=`).exec(appMainSource);
     assert.ok(match, `${name} declaration should exist`);
@@ -64,13 +57,11 @@ const onPopStateCallOrder = Array.from(
 );
 const applyRouteIndex = onPopStateCallOrder.indexOf("applyRoute");
 const syncIndex = onPopStateCallOrder.indexOf("syncLegacyScrollbarMode");
-const trackIndex = onPopStateCallOrder.indexOf("trackPageview");
 assert.ok(applyRouteIndex >= 0, "onPopState should call applyRoute(...) at top level");
 assert.ok(syncIndex >= 0, "onPopState should call syncLegacyScrollbarMode() at top level");
-assert.ok(trackIndex >= 0, "onPopState should call trackPageview() at top level");
 assert.ok(
-  applyRouteIndex < syncIndex && syncIndex < trackIndex,
-  "onPopState should keep applyRoute -> sync -> track order for browser back-forward consistency"
+  applyRouteIndex < syncIndex,
+  "onPopState should keep applyRoute -> sync order for browser back-forward consistency"
 );
 
 assert.match(

@@ -505,7 +505,7 @@
                 <span class="tag-name">{{ tTerm("weapon", weapon.name) }}</span>
                 <span v-if="weapon.isUnowned" class="tag-note is-unowned">{{ t("nav.not_owned") }}</span>
                 <span v-if="weapon.isEssenceOwned" class="tag-note is-essence-owned">{{ t("nav.essence_owned") }}</span>
-                <button @click.stop="toggleWeapon(weapon, 'tag')">✕</button>
+                <button @click.stop="toggleWeapon(weapon)">✕</button>
               </span>
             </div>
             <div class="tag-actions">
@@ -541,7 +541,7 @@
                 'rarity-5': weapon.rarity === 5,
                 'rarity-4': weapon.rarity === 4,
               }"
-              @click="toggleWeapon(weapon, 'grid')"
+              @click="toggleWeapon(weapon)"
             >
               <div class="weapon-art">
                 <img
@@ -704,7 +704,7 @@
                 'is-unowned': isUnowned(weapon.name),
                 'is-essence-owned': isEssenceOwned(weapon.name),
               }"
-              @click="toggleWeapon(weapon, 'attrs')"
+              @click="toggleWeapon(weapon)"
             >
               <div class="scheme-weapon-title">
                 <div

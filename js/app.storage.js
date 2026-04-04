@@ -416,7 +416,6 @@
     recoveryApi.flushPendingStorageIssues();
     recoveryApi.applyBootstrapStorageProbeIssue();
 
-    const urlSelectedWeaponNames = schemaApi.getUrlSelectedWeaponNames();
     let restoredFilterPanelPreference = false;
 
     try {
@@ -483,32 +482,9 @@
         }
       }
     } catch (error) {
-      const isJsonParseError =
-        error &&
-        (error.name === "SyntaxError" ||
-          /json|unexpected token|unterminated/i.test(String(error.message || "")));
-      const shouldRepairFromUrl = isJsonParseError && urlSelectedWeaponNames.length > 0;
-      if (shouldRepairFromUrl) {
-        try {
-          state.selectedNames.value = urlSelectedWeaponNames.slice();
-          persistenceApi.writeJsonStorageWithVerify(
-            state.uiStateStorageKey,
-            { selectedNames: urlSelectedWeaponNames.slice() },
-            { scope: "repair-ui-state-from-url", note: "repair invalid planner-ui-state via url weapons" }
-          );
-        } catch (repairError) {
-          recoveryApi.reportStorageIssue("storage.write", state.uiStateStorageKey, repairError, {
-            scope: "repair-ui-state-from-url",
-          });
-          recoveryApi.reportStorageIssue("storage.read", state.uiStateStorageKey, error, {
-            scope: "restore-ui-state",
-          });
-        }
-      } else {
-        recoveryApi.reportStorageIssue("storage.read", state.uiStateStorageKey, error, {
-          scope: "restore-ui-state",
-        });
-      }
+      recoveryApi.reportStorageIssue("storage.read", state.uiStateStorageKey, error, {
+        scope: "restore-ui-state",
+      });
     }
 
     const storedTheme = persistenceApi.safeGetItem(state.themeModeStorageKey, {

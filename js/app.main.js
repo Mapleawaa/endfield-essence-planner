@@ -1083,41 +1083,21 @@
       const weaponCatalog =
         typeof window !== "undefined" && Array.isArray(window.WEAPONS) ? window.WEAPONS : [];
       const weaponNameSet = new Set(weaponCatalog.map((weapon) => weapon.name));
-      const parseWeaponNames = (params) => {
-        if (!params) return [];
-        const entries = [];
-        const packed = params.get("weapons");
-        if (packed) {
-          entries.push(...packed.split(","));
-        }
-        const repeated = params.getAll("weapon");
-        if (repeated.length) {
-          entries.push(...repeated);
-        }
-        if (!entries.length) return [];
-        const unique = Array.from(
-          new Set(entries.map((name) => (name || "").trim()).filter(Boolean))
-        );
-        return unique.filter((name) => weaponNameSet.has(name));
-      };
-
-      const parseRoute = () => {
+const parseRoute = () => {
         if (typeof window === "undefined") {
           return { view: state.currentView.value };
         }
         const params = new URLSearchParams(window.location.search || "");
         const view = params.get("view") || "planner";
         const characterId = params.get("operator");
-        const hasWeaponParam = params.has("weapons") || params.has("weapon");
-        const weaponNames = hasWeaponParam ? parseWeaponNames(params) : [];
         if (view === "strategy") {
-          return { view: "strategy", characterId, weaponNames, hasWeaponParam };
+          return { view: "strategy", characterId };
         }
         if (view === "editor") {
           return { view: "editor" };
         }
         if (view === "equip-refining") {
-          return { view: "equip-refining", weaponNames, hasWeaponParam };
+          return { view: "equip-refining" };
         }
         if (view === "rerun-ranking") {
           return { view: "rerun-ranking" };
@@ -1128,7 +1108,7 @@
         if (view === "background") {
           return { view: "background" };
         }
-        return { view: "planner", weaponNames, hasWeaponParam };
+return { view: "planner" };
       };
 
       let applyingRoute = false;
@@ -1143,9 +1123,6 @@
           } else {
             pendingStrategyCharacterId = route.characterId || null;
           }
-        }
-        if (route.view === "planner" && route.hasWeaponParam) {
-          state.selectedNames.value = Array.isArray(route.weaponNames) ? route.weaponNames : [];
         }
         applyingRoute = false;
       };
@@ -1162,14 +1139,6 @@
               ? state.selectedCharacterId.value
               : pendingStrategyCharacterId || "";
           if (id) params.set("operator", id);
-        }
-        if (view === "planner") {
-          const selected = Array.isArray(state.selectedNames.value)
-            ? state.selectedNames.value.filter((name) => weaponNameSet.has(name))
-            : [];
-          if (selected.length) {
-            params.set("weapons", selected.join(","));
-          }
         }
         const query = params.toString();
         return query ? `?${query}` : "";
@@ -1261,15 +1230,6 @@
         syncLegacyScrollbarMode();
         syncQuery(false);
       });
-
-      watch(
-        state.selectedNames,
-        () => {
-          if (state.currentView.value !== "planner") return;
-          syncQuery(true);
-        },
-        { deep: true }
-      );
 
       const parseExceptionTime = (value) => {
         const time = Date.parse(String(value || ""));

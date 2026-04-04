@@ -315,28 +315,6 @@
       return next;
     };
 
-    const getUrlSelectedWeaponNames = () => {
-      if (typeof window === "undefined") return [];
-      try {
-        const params = new URLSearchParams(window.location.search || "");
-        if (!params.has("weapons") && !params.has("weapon")) return [];
-        const names = [];
-        const packed = params.get("weapons");
-        if (packed) {
-          names.push(...packed.split(","));
-        }
-        const repeated = params.getAll("weapon");
-        if (repeated.length) {
-          names.push(...repeated);
-        }
-        if (!names.length) return [];
-        const unique = Array.from(new Set(names.map((name) => String(name || "").trim()).filter(Boolean)));
-        return unique.filter((name) => weaponNameSet.has(name));
-      } catch (error) {
-        return [];
-      }
-    };
-
     const isThemeMode = (value) => themeModes.has(value);
 
     const shouldCollapseFilterPanelByDefault = () => {
@@ -350,7 +328,6 @@
       inspectWeaponMarksSchemaIssues,
       serializeWeaponMarksNormalized,
       sanitizeState,
-      getUrlSelectedWeaponNames,
       isThemeMode,
       shouldCollapseFilterPanelByDefault,
     };

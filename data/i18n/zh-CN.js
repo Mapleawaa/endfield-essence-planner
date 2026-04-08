@@ -866,7 +866,7 @@ Object.assign(window.I18N["zh-CN"].strings, {
   "sync.membership_plan_quarter_discount": "9.5 折",
   "sync.membership_plan_year_discount": "9 折",
   "sync.membership_rights_hint": "会员/体验期权益：自动同步、数倍于免费档的数据空间、支持自定义武器同步、免广告、专属标识。",
-  "sync.membership_payment_guide": "支付宝请填写交易订单号，微信请填写交易单号 (订单号) 。系统会自动匹配已导入的支付记录；匹配不到时会保留申请供后台审核。请按各挡位金额支付，金额与所有挡位不一致且无任何备注时将视为无偿赞助，感谢你的支持！",
+  "sync.membership_payment_guide": "支付宝请填写交易号（请勿填写商家订单号），微信请填写交易单号 (订单号) 。系统会自动匹配已导入的支付记录；匹配不到时会保留申请供后台审核。请按各挡位金额支付，金额与所有挡位不一致且无任何备注时将视为无偿赞助，感谢你的支持！",
   "sync.membership_exact_amount_hint": "",
   "sync.payment_channel_label": "支付方式",
   "sync.payment_reference_label": "支付凭证",

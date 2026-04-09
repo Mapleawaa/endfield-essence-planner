@@ -2393,6 +2393,9 @@
           }
           if (skipSyncFetch) return;
           if (options && options.forceFullSnapshot) {
+            if (isAutoSyncRestricted() || !isAutoSyncAllowed()) {
+              return;
+            }
             const remote = await fetchRemoteSnapshot();
             await reconcileRemoteSnapshot(remote, {
               noticeKey: "sync.remote_pulled_notice",
@@ -2426,6 +2429,9 @@
     };
 
     const handleInitialRemoteStateAfterAuth = async () => {
+      if (isAutoSyncRestricted() || !isAutoSyncAllowed()) {
+        return "restricted";
+      }
       const remote = await fetchRemoteSnapshot();
       const comparison = describeRemoteState(remote);
       if (comparison.serverVersion <= 0 && comparison.localHasData) {
@@ -2453,6 +2459,14 @@
       });
     };
 
+    function isAutoSyncAllowed() {
+      return Boolean(state.syncUser.value && state.syncUser.value.auto_sync_allowed);
+    }
+
+    function isAutoSyncRestricted() {
+      return Boolean(state.syncRestrictionCode.value === "premium_required" || state.syncRestrictionCode.value === "email_verification_required");
+    }
+
     const runPassiveRemoteCheck = async (options) => {
       if (!ensureSyncFrontendAllowed({ silent: Boolean(options && options.silentBlocked) })) {
         return "blocked";
@@ -2468,6 +2482,10 @@
         if (!readSessionHint()) return "idle";
         await refreshSyncSession(true);
         if (!state.syncAuthenticated.value) return "signed_out";
+      }
+      if (state.syncAuthenticated.value) {
+        if (isAutoSyncRestricted()) return "restricted";
+        if (!isAutoSyncAllowed()) return "restricted";
       }
       try {
         lastRemoteRefreshAt = now;

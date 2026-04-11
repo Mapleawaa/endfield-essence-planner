@@ -1,5 +1,7 @@
 window.WEAPONS = [
   // 六星
+  { name: "雾中微光", rarity: 6, type: "施术单元", s1: "意志提升", s2: "电磁伤害提升", s3: "效益" },
+  { name: "孤舟", rarity: 6, type: "施术单元", s1: "意志提升", s2: "攻击提升", s3: "压制" },
   { name: "望乡", rarity: 6, type: "手铳", s1: "敏捷提升", s2: "寒冷伤害提升", s3: "压制" },
   { name: "光荣记忆", rarity: 6, type: "单手剑", s1: "敏捷提升", s2: "暴击率提升", s3: "夜幕" },
   { name: "狼之绯", short: "洛茜专武", chars: ["洛茜"], rarity: 6, type: "单手剑", isPreview: false, s1: "敏捷提升", s2: "暴击率提升", s3: "切骨" },

@@ -1,4 +1,5 @@
 window.WEAPON_IMAGES = {
+  "孤舟": "wpn_funnel_0015",
   "狼之绯": "wpn_sword_0022",
   "望乡": "wpn_pistol_0007",
   "光荣记忆": "wpn_sword_0017",

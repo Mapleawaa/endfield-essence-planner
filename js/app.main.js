@@ -627,6 +627,9 @@
       announceStrictRuntimeEnv(runtimeEnv);
       const showEditorEntry = runtimeEnv === "development" || runtimeEnv === "test";
       state.showEditorEntry = showEditorEntry;
+      // Keep the hero ad banner codepath available, but disable both rendering
+      // and related detection until this area is needed again.
+      state.heroAdBannerEnabled = ref(false);
       const initializedModules = new Set();
       const providedCapabilities = new Set();
       const pendingInitContractWarnings = [];
@@ -1572,6 +1575,7 @@ return { view: "planner" };
         tOwnershipPriorityModeOptions: state.tOwnershipPriorityModeOptions,
         tStrictPriorityOrderOptions: state.tStrictPriorityOrderOptions,
         showAiNotice: state.showAiNotice,
+        heroAdBannerEnabled: state.heroAdBannerEnabled,
         searchQuery: state.searchQuery,
         selectedNames: state.selectedNames,
         selectedCount: state.selectedCount,
@@ -1815,6 +1819,7 @@ return { view: "planner" };
         showAbout: state.showAbout,
         showFaq: state.showFaq,
         showSyncModal: state.showSyncModal,
+        showCnSyncUnavailableModal: state.showCnSyncUnavailableModal,
         showNotice: state.showNotice,
         showChangelog: state.showChangelog,
         hasLegacyMigrationData: state.hasLegacyMigrationData,
@@ -1892,7 +1897,9 @@ return { view: "planner" };
         openChangelog: state.openChangelog,
         openAbout: state.openAbout,
         openFaq,
+        openCnSyncUnavailableModal: state.openCnSyncUnavailableModal,
         openSyncModal: state.openSyncModal,
+        closeCnSyncUnavailableModal: state.closeCnSyncUnavailableModal,
         closeSyncModal: state.closeSyncModal,
         closeNotice: state.closeNotice,
         closeAdblockNotice: state.closeAdblockNotice,
@@ -1913,6 +1920,7 @@ return { view: "planner" };
         themePreference: state.themePreference,
         resolvedTheme: state.resolvedTheme,
         showSecondaryMenu: state.showSecondaryMenu,
+        syncRegionAccessMode: state.syncRegionAccessMode,
         syncAuthMode: state.syncAuthMode,
         syncBusy: state.syncBusy,
         syncAuthenticated: state.syncAuthenticated,
@@ -1943,6 +1951,8 @@ return { view: "planner" };
         syncResetCodeRequestCooldownSeconds: state.syncResetCodeRequestCooldownSeconds,
         syncPaymentChannelInput: state.syncPaymentChannelInput,
         syncPaymentReferenceInput: state.syncPaymentReferenceInput,
+        syncPaymentMerchantOrderInput: state.syncPaymentMerchantOrderInput,
+        syncPaymentPaidTimeInput: state.syncPaymentPaidTimeInput,
         syncPaymentClaimError: state.syncPaymentClaimError,
         syncPaymentClaimNotice: state.syncPaymentClaimNotice,
         syncUserPaymentClaims: state.syncUserPaymentClaims,
@@ -1992,6 +2002,9 @@ return { view: "planner" };
         submitSyncEmailAction: state.submitSyncEmailAction,
         sendSyncVerificationCode: state.sendSyncVerificationCode,
         submitPaymentClaim: state.submitPaymentClaim,
+        formatSyncPaymentChannelLabel: state.formatSyncPaymentChannelLabel,
+        formatSyncPaymentStatusLabel: state.formatSyncPaymentStatusLabel,
+        formatClaimTime: state.formatClaimTime,
         logoutSync: state.logoutSync,
         performManualSync: state.performManualSync,
         resolveSyncConflictUseServer: state.resolveSyncConflictUseServer,

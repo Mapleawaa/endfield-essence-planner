@@ -53,8 +53,11 @@
             </select>
           </div>
           <button
+            v-if="syncRegionAccessMode !== 'hidden' && syncRegionAccessMode !== 'cn-blocked'"
             class="about-button login-button profile-entry-button"
-            :title="syncAuthenticated && syncUser && syncUser.username ? syncUser.username : t('sync.login_action')"
+            :title="syncRegionAccessMode === 'detect-failed'
+              ? t('sync.region_detection_failed_title')
+              : (syncAuthenticated && syncUser && syncUser.username ? syncUser.username : t('sync.login_action'))"
             @click="openSyncModal"
           >
             <span class="profile-entry-icon" aria-hidden="true">
@@ -64,11 +67,30 @@
               </svg>
             </span>
             <span class="profile-entry-label">
-              {{ syncAuthenticated && syncUser && syncUser.username ? syncUser.username : t("sync.login_action") }}
+              {{ syncRegionAccessMode === 'detect-failed'
+                ? t("sync.region_detection_failed_action")
+                : (syncAuthenticated && syncUser && syncUser.username ? syncUser.username : t("sync.login_action")) }}
             </span>
-            <span v-if="syncAuthenticated && syncUser && syncUser.badge" class="sync-badge-pill profile-entry-badge">
+            <span
+              v-if="syncRegionAccessMode !== 'detect-failed' && syncAuthenticated && syncUser && syncUser.badge"
+              class="sync-badge-pill profile-entry-badge"
+            >
               {{ syncUser.badge === 'supporter' ? t('sync.badge_supporter') : syncUser.badge }}
             </span>
+          </button>
+          <button
+            v-else-if="syncRegionAccessMode === 'cn-blocked'"
+            class="about-button login-button profile-entry-button"
+            :title="t('sync.cn_region_unavailable_title')"
+            @click="openCnSyncUnavailableModal"
+          >
+            <span class="profile-entry-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M12 12a4.25 4.25 0 1 0 0-8.5 4.25 4.25 0 0 0 0 8.5Z"></path>
+                <path d="M4.5 20.25a7.5 7.5 0 0 1 15 0"></path>
+              </svg>
+            </span>
+            <span class="profile-entry-label">{{ t("sync.cn_region_unavailable_action") }}</span>
           </button>
           <div class="secondary-menu">
             <button class="about-button menu-toggle" @click="showSecondaryMenu = !showSecondaryMenu">
@@ -246,7 +268,10 @@
           </nav>
         </div>
       </header>
-      <section v-if="!syncAuthenticated || (syncUser && !syncUser.ad_free)" class="hero-ad-banner">
+      <section
+        v-if="heroAdBannerEnabled && (!syncAuthenticated || (syncUser && !syncUser.ad_free))"
+        class="hero-ad-banner"
+      >
         <span class="hero-ad-badge">广告/AD</span>
         <a class="about-button hero-ad-link" href="https://pan.quark.cn/s/27540d6f3706" target="_blank" rel="noreferrer noopener">
           {{ t("sync.download_background") }}

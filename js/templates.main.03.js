@@ -464,7 +464,21 @@
             <h3>{{ t("nav.sync_login") }}</h3>
             <div class="about-body sync-body">
               <div v-if="syncFrontendBlocked" class="sync-feedback sync-feedback-error">
-                {{ syncFrontendBlockedMessage }}
+                <div class="sync-feedback-text">{{ syncFrontendBlockedMessage }}</div>
+                <div
+                  v-if="syncRegionAccessMode === 'detect-failed' || syncRegionAccessMode === 'cn-blocked'"
+                  class="sync-feedback-text"
+                >
+                  <span>{{ t("sync.mainland_service_redirect_notice_prefix") }}</span>
+                  <a
+                    class="notice-link"
+                    href="https://end.07070721.xyz"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {{ t("sync.international_site_action") }}
+                  </a>
+                </div>
               </div>
               <div v-if="!syncAuthenticated" class="sync-auth-tabs">
                 <button
@@ -674,7 +688,7 @@
                       <div class="secondary-label">{{ t("sync.account_status") }}</div>
                       <div class="sync-status-user-name">
                         {{ syncUser && syncUser.username ? syncUser.username : "-" }}
-                        <span v-if="syncUser && syncUser.badge" class="sync-badge-pill">{{ syncUser.badge === 'supporter' ? t('sync.badge_supporter') : syncUser.badge }}</span>
+                        <span v-if="syncUser && syncUser.plan_tier === 'premium'" class="sync-badge-pill">{{ t('sync.badge_supporter') }}</span>
                       </div>
                       <div class="secondary-hint">
                         {{ t("sync.account_id_hint", { id: syncUser && syncUser.id != null ? syncUser.id : "-" }) }}
@@ -1244,6 +1258,17 @@
             <h3>{{ t("sync.cn_region_unavailable_title") }}</h3>
             <div class="notice-body">
               <p>{{ t("sync.cn_region_unavailable_summary") }}</p>
+              <p>
+                <span>{{ t("sync.mainland_service_redirect_notice_prefix") }}</span>
+                <a
+                  class="notice-link"
+                  href="https://end.07070721.xyz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{ t("sync.international_site_action") }}
+                </a>
+              </p>
             </div>
             <div class="about-actions">
               <button class="ghost-button" @click="closeCnSyncUnavailableModal">{{ t("plan_config.close") }}</button>

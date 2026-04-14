@@ -71,12 +71,12 @@
                 ? t("sync.region_detection_failed_action")
                 : (syncAuthenticated && syncUser && syncUser.username ? syncUser.username : t("sync.login_action")) }}
             </span>
-            <span
-              v-if="syncRegionAccessMode !== 'detect-failed' && syncAuthenticated && syncUser && syncUser.badge"
-              class="sync-badge-pill profile-entry-badge"
-            >
-              {{ syncUser.badge === 'supporter' ? t('sync.badge_supporter') : syncUser.badge }}
-            </span>
+              <span
+                v-if="syncRegionAccessMode !== 'detect-failed' && syncAuthenticated && syncUser && syncUser.plan_tier === 'premium'"
+                class="sync-badge-pill profile-entry-badge"
+              >
+                {{ t('sync.badge_supporter') }}
+              </span>
           </button>
           <button
             v-else-if="syncRegionAccessMode === 'cn-blocked'"

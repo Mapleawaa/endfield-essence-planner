@@ -717,7 +717,7 @@ Object.assign(window.I18N["zh-CN"].strings, {
   "sync.turnstile_placeholder": "正在准备人机验证区域…",
   "sync.session_checking": "正在检查登录状态…",
   "sync.session_checking_hint": "如果你之前已经登录，系统会自动恢复同步会话。",
-  "sync.credentials_hint": "最多支持 3 个设备同时登录。",
+  "sync.credentials_hint": "最多支持 5 个设备同时登录。",
   "sync.testing_warning": "同步功能目前仍在测试中，建议先使用“导出标记数据”功能做一份备份。",
   "sync.login_action": "登录",
   "sync.register_action": "创建账号",

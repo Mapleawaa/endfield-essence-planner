@@ -747,7 +747,7 @@ Object.assign(window.I18N["en"].strings, {
   "sync.turnstile_placeholder": "Preparing verification area…",
   "sync.session_checking": "Checking sign-in status…",
   "sync.session_checking_hint": "If you previously signed in, the sync session will be restored automatically.",
-  "sync.credentials_hint": "Up to 3 devices can stay signed in at the same time.",
+  "sync.credentials_hint": "Up to 5 devices can stay signed in at the same time.",
   "sync.testing_warning": "Sync is still in testing. You can use “Export Mark Data” first to keep a backup.",
   "sync.login_action": "Sign In",
   "sync.register_action": "Create Account",

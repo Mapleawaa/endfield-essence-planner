@@ -766,7 +766,7 @@ Object.assign(window.I18N["ja"].strings, {
   "sync.turnstile_placeholder": "本人確認エリアを準備しています…",
   "sync.session_checking": "ログイン状態を確認しています…",
   "sync.session_checking_hint": "以前ログインしていれば、同期セッションを自動で復元します。",
-  "sync.credentials_hint": "同時にログインできる端末は最大 3 台です。",
+  "sync.credentials_hint": "同時にログインできる端末は最大 5 台です。",
   "sync.testing_warning": "同期機能は現在テスト中です。まず「マークデータをエクスポート」でバックアップを取っておくと安心です。",
   "sync.login_action": "ログイン",
   "sync.register_action": "アカウント作成",

@@ -766,7 +766,7 @@ Object.assign(window.I18N["zh-TW"].strings, {
   "sync.turnstile_placeholder": "正在準備人機驗證區域…",
   "sync.session_checking": "正在檢查登入狀態…",
   "sync.session_checking_hint": "如果你之前已登入，系統會自動恢復同步工作階段。",
-  "sync.credentials_hint": "最多支援 3 個裝置同時登入。",
+  "sync.credentials_hint": "最多支援 5 個裝置同時登入。",
   "sync.testing_warning": "同步功能目前仍在測試中，建議先使用「匯出標記資料」功能備份一份資料。",
   "sync.login_action": "登入",
   "sync.register_action": "建立帳號",

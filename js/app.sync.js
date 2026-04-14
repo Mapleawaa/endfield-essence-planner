@@ -6,7 +6,9 @@
     const syncMetaStorageKey = state.syncMetaStorageKey || "planner-sync-meta:v1";
     const syncPrefsStorageKey = state.syncPrefsStorageKey || "planner-sync-prefs:v1";
     const syncDevStorageKey = state.syncDevStorageKey || "planner-sync-dev:v1";
+    const syncAuthTokenStorageKey = state.syncAuthTokenStorageKey || "planner-sync-auth-token:v1";
     const syncSessionHintStorageKey = state.syncSessionHintStorageKey || "planner-session-hint:v1";
+    const syncLegacyMigrationAttemptSessionKey = state.syncLegacyMigrationAttemptSessionKey || "planner-sync-legacy-migrate-attempted:v1";
     const syncEmailToastSessionKey = state.syncEmailToastSessionKey || "planner-sync-email-toast:v1";
     const syncPlanToastSessionKey = state.syncPlanToastSessionKey || "planner-sync-plan-toast:v1";
     const syncRestrictionToastSessionKey = state.syncRestrictionToastSessionKey || "planner-sync-restriction-toast:v1";
@@ -42,6 +44,7 @@
     let autoSyncTimer = null;
     let autoSyncCountdownTimer = null;
     let syncSessionRequest = null;
+    let syncLegacyCookieMigrationRequest = null;
     let remoteRefreshTimer = null;
     let syncModalCleanupTimer = null;
     let lastRemoteRefreshAt = 0;
@@ -737,6 +740,53 @@
       } catch (error) {
         // ignore storage failures for non-sensitive session hint
       }
+    };
+
+    const readSyncAuthToken = () => {
+      try {
+        return String(localStorage.getItem(syncAuthTokenStorageKey) || "").trim();
+      } catch (error) {
+        return "";
+      }
+    };
+
+    const writeSyncAuthToken = (token) => {
+      try {
+        if (token) {
+          localStorage.setItem(syncAuthTokenStorageKey, String(token));
+          return;
+        }
+        localStorage.removeItem(syncAuthTokenStorageKey);
+      } catch (error) {
+        // ignore storage failures for auth token persistence
+      }
+    };
+
+    const readLegacyMigrationAttempted = () =>
+      readSessionStorageValue(syncLegacyMigrationAttemptSessionKey) === "1";
+
+    const writeLegacyMigrationAttempted = (enabled) => {
+      writeSessionStorageValue(syncLegacyMigrationAttemptSessionKey, enabled ? "1" : "");
+    };
+
+    const clearSyncAuthToken = () => {
+      writeSyncAuthToken("");
+      writeLegacyMigrationAttempted(false);
+    };
+
+    const storeSyncAuthToken = (result) => {
+      const token = result && typeof result.token === "string"
+        ? String(result.token || "").trim()
+        : "";
+      if (!token) return "";
+      writeSyncAuthToken(token);
+      writeLegacyMigrationAttempted(false);
+      return token;
+    };
+
+    const getSyncAuthorizationHeader = () => {
+      const token = readSyncAuthToken();
+      return token ? `Bearer ${token}` : "";
     };
 
     const formatSyncDateTime = (value) => {
@@ -1456,17 +1506,30 @@
       const requestOptions = Object.assign(
         {
           method: "GET",
-          credentials: "include",
+          credentials: "omit",
         },
         options || {}
       );
       const query = isPlainObject(requestOptions.query) ? requestOptions.query : null;
+      const useLegacyCookie = requestOptions.useLegacyCookie === true;
+      const skipAuthToken = requestOptions.skipAuthToken === true;
       delete requestOptions.query;
+      delete requestOptions.useLegacyCookie;
+      delete requestOptions.skipAuthToken;
+      if (useLegacyCookie) {
+        requestOptions.credentials = "include";
+      }
       requestOptions.headers = Object.assign(
         {},
         getSyncRequestHeaders(requestOptions),
         options && isPlainObject(options.headers) ? options.headers : {}
       );
+      if (!skipAuthToken) {
+        const authorizationHeader = getSyncAuthorizationHeader();
+        if (authorizationHeader && !requestOptions.headers.Authorization) {
+          requestOptions.headers.Authorization = authorizationHeader;
+        }
+      }
       const requestUrl = buildApiUrl(endpoint, query);
       const requestContext = {
         endpoint,
@@ -1504,6 +1567,54 @@
         throw error;
       }
       return payload || {};
+    };
+
+    const migrateLegacyCookieSession = async () => {
+      if (readSyncAuthToken()) return true;
+      if (!readSessionHint()) return false;
+      if (readLegacyMigrationAttempted()) return false;
+      if (syncLegacyCookieMigrationRequest) return syncLegacyCookieMigrationRequest;
+
+      const currentRequest = (async () => {
+        writeLegacyMigrationAttempted(true);
+        try {
+          const result = await requestJson("auth/migrate-cookie", {
+            method: "POST",
+            useLegacyCookie: true,
+            skipAuthToken: true,
+          });
+          const token = storeSyncAuthToken(result);
+          if (!token) {
+            writeLegacyMigrationAttempted(false);
+            return false;
+          }
+          writeSessionHint(true);
+          return true;
+        } catch (error) {
+          const errorCode = extractSyncErrorCode(
+            (error && error.payload && error.payload.error) || (error && error.message) || ""
+          );
+          const terminalFailure = Boolean(
+            errorCode === "account_disabled" ||
+            errorCode === "invalid_session" ||
+            errorCode === "session_expired" ||
+            errorCode === "unauthorized" ||
+            (error && error.status === 401)
+          );
+          if (terminalFailure) {
+            writeSessionHint(false);
+            return false;
+          } else {
+            writeLegacyMigrationAttempted(false);
+            return null;
+          }
+        } finally {
+          syncLegacyCookieMigrationRequest = null;
+        }
+      })();
+
+      syncLegacyCookieMigrationRequest = currentRequest;
+      return currentRequest;
     };
 
     const readAdblockDismissedInSession = () => {
@@ -2221,6 +2332,7 @@
     };
 
     const handleSyncUnauthorized = (options) => {
+      clearSyncAuthToken();
       writeSessionHint(false);
       resetSyncSessionState();
       if (options && options.toastLogin) {
@@ -2235,6 +2347,7 @@
     };
 
     const handleSyncAccountDisabled = (options) => {
+      clearSyncAuthToken();
       writeSessionHint(false);
       resetSyncSessionState();
       const message = createSyncTextEntry(
@@ -2631,6 +2744,16 @@
       state.syncSessionChecking.value = true;
       const currentRequest = (async () => {
         try {
+          let migrationResult;
+          if (!readSyncAuthToken() && readSessionHint()) {
+            migrationResult = await migrateLegacyCookieSession();
+          }
+          if (!readSyncAuthToken()) {
+            if (migrationResult === false) {
+              handleSyncUnauthorized({ silent: true });
+            }
+            return;
+          }
           const me = await requestJson("auth/me");
           const previousUser = state.syncUser.value;
           state.syncUserPaymentClaims.value = me && Array.isArray(me.payment_claims) ? me.payment_claims : [];
@@ -3058,35 +3181,6 @@
       state.syncNotice.value = "";
     };
 
-    const sendBestEffortLeaveSync = () => {
-      if (!ensureSyncFrontendAllowed({ silent: true })) return;
-      if (isLocalhostFrontend()) return;
-      if (shouldSkipAutoRefresh()) return;
-      if (!state.syncAuthenticated.value || state.syncBusy.value || state.syncConflictDetected.value) return;
-      if (typeof fetch !== "function") return;
-      const currentHash = String(state.syncCurrentComparableHash.value || "");
-      const lastHash = String(state.syncLastLocalHash.value || "");
-      if (!currentHash || currentHash === lastHash) return;
-      const localPayload = buildLocalPayload();
-      const baseVersion = Number(state.syncRemoteVersion.value || state.syncLastSyncedServerVersion.value || 0);
-      try {
-        fetch(buildApiUrl("sync"), {
-          method: "POST",
-          credentials: "include",
-          keepalive: true,
-          headers: {
-            "Content-Type": "text/plain;charset=UTF-8",
-          },
-          body: JSON.stringify({
-            base_version: baseVersion,
-            data: localPayload,
-          }),
-        });
-      } catch (error) {
-        // best effort only; normal timed sync remains the primary guarantee
-      }
-    };
-
     const submitSyncAuth = async () => {
       if (!ensureSyncFrontendAllowed()) return;
       const account = String(state.syncAccountInput.value || "").trim();
@@ -3136,8 +3230,12 @@
             };
         const authResult = await requestJson(isRegister ? "auth/register" : "auth/login", {
           method: "POST",
+          skipAuthToken: true,
           body: JSON.stringify(authPayload),
         });
+        if (!storeSyncAuthToken(authResult)) {
+          throw new Error("auth_failed");
+        }
         writeSessionHint(true);
         state.syncAccountInput.value = "";
         state.syncPasswordInput.value = "";
@@ -3368,6 +3466,7 @@
       try {
         await requestJson("auth/logout", {
           method: "POST",
+          credentials: "include",
           body: JSON.stringify({}),
         });
       } catch (error) {
@@ -3375,6 +3474,7 @@
       } finally {
         state.syncBusy.value = false;
       }
+      clearSyncAuthToken();
       state.syncUser.value = null;
       resetSyncSessionState();
       clearSyncModalCleanupTimer();
@@ -3591,14 +3691,9 @@
           if (!isDocumentVisible() || !isSyncFrontendAllowed()) return;
           runPassiveRemoteCheck({ silentBlocked: true, silentErrors: true });
         };
-        const handleSyncPageHide = () => {
-          sendBestEffortLeaveSync();
-        };
         state.__handleSyncVisibilityRecovery = handleSyncVisibilityRecovery;
-        state.__handleSyncPageHide = handleSyncPageHide;
         window.addEventListener("focus", handleSyncVisibilityRecovery);
         window.addEventListener("pageshow", handleSyncVisibilityRecovery);
-        window.addEventListener("pagehide", handleSyncPageHide);
         if (typeof document !== "undefined") {
           document.addEventListener("visibilitychange", handleSyncVisibilityRecovery);
         }
@@ -3629,15 +3724,10 @@
         window.removeEventListener("focus", handleSyncVisibilityRecovery);
         window.removeEventListener("pageshow", handleSyncVisibilityRecovery);
       }
-      const handleSyncPageHide = state.__handleSyncPageHide;
-      if (handleSyncPageHide && typeof window !== "undefined") {
-        window.removeEventListener("pagehide", handleSyncPageHide);
-      }
       if (handleSyncVisibilityRecovery && typeof document !== "undefined") {
         document.removeEventListener("visibilitychange", handleSyncVisibilityRecovery);
       }
       state.__handleSyncVisibilityRecovery = null;
-      state.__handleSyncPageHide = null;
       clearAdblockDetectionTimer();
       state.showAdblockNotice.value = false;
       state.aboutAdLoaded.value = false;

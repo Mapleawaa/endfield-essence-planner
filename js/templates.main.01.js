@@ -268,6 +268,17 @@
           </nav>
         </div>
       </header>
+      <section class="site-feedback-banner" aria-label="问卷入口">
+        <span class="site-feedback-label">我们诚邀您填写网站调研问卷，感谢您抽出宝贵时间作答：</span>
+        <a
+          class="about-button site-feedback-link"
+          href="https://wj.qq.com/s2/26332435/z16l/"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          问卷跳转
+        </a>
+      </section>
       <section
         v-if="heroAdBannerEnabled && (!syncAuthenticated || (syncUser && !syncUser.ad_free))"
         class="hero-ad-banner"

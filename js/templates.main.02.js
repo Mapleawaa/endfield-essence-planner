@@ -254,20 +254,24 @@
                         {{ t("plan.conflict_reason_reason", { reason: weapon.conflictReason }) }}
                       </div>
                       <div class="weapon-exclude-row" @click.stop>
-                        <button
-                          class="exclude-toggle small"
-                          :class="{ active: !weapon.isUnowned, 'intent-alert': weapon.isUnowned }"
-                          @click.stop="toggleWeaponOwned(weapon)"
-                        >
-                          {{ weapon.isUnowned ? t("button.mark_weapon_owned") : t("button.mark_weapon_not_owned") }}
-                        </button>
-                        <button
-                          class="exclude-toggle small"
-                          :class="{ active: weapon.isEssenceOwnedReal, 'intent-alert': !weapon.isEssenceOwnedReal }"
-                          @click.stop="toggleEssenceOwned(weapon)"
-                        >
-                          {{ weapon.isEssenceOwnedReal ? t("button.mark_essence_not_owned") : t("button.mark_essence_owned") }}
-                        </button>
+                        <label class="exclude-checkbox-label">
+                          <input
+                            type="checkbox"
+                            class="exclude-checkbox"
+                            :checked="!weapon.isUnowned"
+                            @change.stop="toggleWeaponOwned(weapon)"
+                          />
+                          <span>{{ t("label.weapon_owned") }}</span>
+                        </label>
+                        <label class="exclude-checkbox-label">
+                          <input
+                            type="checkbox"
+                            class="exclude-checkbox"
+                            :checked="weapon.isEssenceOwnedReal"
+                            @change.stop="toggleEssenceOwned(weapon)"
+                          />
+                          <span>{{ t("label.essence_owned") }}</span>
+                        </label>
                         <textarea
                           class="exclude-note-input"
                           :class="{ 'is-essence-owned': weapon.isEssenceOwnedReal, 'is-unowned': weapon.isUnowned }"
@@ -383,20 +387,24 @@
                     </span>
                   </div>
                   <div class="weapon-exclude-row" @click.stop>
-                    <button
-                      class="exclude-toggle small"
-                      :class="{ active: !weapon.isUnowned, 'intent-alert': weapon.isUnowned }"
-                      @click.stop="toggleWeaponOwned(weapon)"
-                    >
-                      {{ weapon.isUnowned ? t("button.mark_weapon_owned") : t("button.mark_weapon_not_owned") }}
-                    </button>
-                    <button
-                      class="exclude-toggle small"
-                      :class="{ active: weapon.isEssenceOwnedReal, 'intent-alert': !weapon.isEssenceOwnedReal }"
-                      @click.stop="toggleEssenceOwned(weapon)"
-                    >
-                      {{ weapon.isEssenceOwnedReal ? t("button.mark_essence_not_owned") : t("button.mark_essence_owned") }}
-                    </button>
+                    <label class="exclude-checkbox-label">
+                      <input
+                        type="checkbox"
+                        class="exclude-checkbox"
+                        :checked="!weapon.isUnowned"
+                        @change.stop="toggleWeaponOwned(weapon)"
+                      />
+                      <span>{{ t("label.weapon_owned") }}</span>
+                    </label>
+                    <label class="exclude-checkbox-label">
+                      <input
+                        type="checkbox"
+                        class="exclude-checkbox"
+                        :checked="weapon.isEssenceOwnedReal"
+                        @change.stop="toggleEssenceOwned(weapon)"
+                      />
+                      <span>{{ t("label.essence_owned") }}</span>
+                    </label>
                     <textarea
                       class="exclude-note-input"
                       :class="{ 'is-essence-owned': weapon.isEssenceOwnedReal, 'is-unowned': weapon.isUnowned }"

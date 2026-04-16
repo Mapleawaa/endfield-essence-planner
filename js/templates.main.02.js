@@ -13,17 +13,28 @@
             <div v-if="coverageSummary && coverageSummary.hasGap" class="card">
               <div class="card-header">
                 <div>
-                  <div class="card-title">{{ t("plan.current_selection_needs_batch_farming") }}</div>
+                  <div class="card-title">
+                    {{
+                      coverageSummary.cause === "regionFilter"
+                        ? t("plan.region_filter_uncovered_weapons_title")
+                        : t("plan.uncovered_weapons_title")
+                    }}
+                  </div>
                   <div class="hint">
-                    {{ t("guide.this_selection_can_t_be_completed_in_a_single_batch_gene", {
-                      count: recommendations.length,
-                    }) }}
-                    <span class="hint-accent">
-                      {{ t("guide.the_count_plans_shown_already_cover_all_selected_weapons", {
-                        count: displayRecommendations.length,
-                      }) }}
+                    {{
+                      coverageSummary.cause === "regionFilter"
+                        ? t("guide.current_region_filter_excludes_some_selected_weapons")
+                        : t("guide.current_plans_do_not_cover_all_selected_weapons")
+                    }}
+                  </div>
+                  <div class="missing-tags">
+                    <span
+                      v-for="name in coverageSummary.missingNames"
+                      :key="'coverage-missing-' + name"
+                      class="missing-tag"
+                    >
+                      {{ tTerm("weapon", name) }}
                     </span>
-                    {{ t("plan.see_details_below_to_view_more_plans_click_show_other_pl") }}
                   </div>
                 </div>
               </div>
@@ -144,7 +155,6 @@
                   :class="{ 'status-warn': card.manualPickOverflow }"
                 >
                   <template v-if="card.manualPickOverflow">
-                    <span class="hint-line">{{ t("label.more_than_three_base_attributes_selected_please_drop_one") }}</span>
                     <span class="hint-line hint-accent">
                       {{
                         t("guide.click_a_yellow_highlighted_weapon_below_to_drop_the_base", {
@@ -154,7 +164,6 @@
                     </span>
                   </template>
                   <template v-else-if="card.manualPickNeeded">
-                    <span class="hint-line">{{ t("label.more_than_three_base_attributes") }}</span>
                     <span class="hint-line hint-accent">
                       {{
                         t("guide.item", {
@@ -164,7 +173,6 @@
                     </span>
                   </template>
                   <template v-else>
-                    <span class="hint-line">{{ t("label.base_attributes_locked_simultaneous_farming_range_update") }}</span>
                     <span class="hint-line hint-accent">{{ t("guide.click_weapons_to_select_deselect_base_attributes") }}</span>
                   </template>
                 </div>
@@ -253,7 +261,7 @@
                       <div class="conflict-reason">
                         {{ t("plan.conflict_reason_reason", { reason: weapon.conflictReason }) }}
                       </div>
-                      <div class="weapon-exclude-row" @click.stop>
+                      <div v-if="showWeaponOwnershipInPlans" class="weapon-exclude-row" @click.stop>
                         <label class="exclude-checkbox-label">
                           <input
                             type="checkbox"
@@ -386,7 +394,7 @@
                       <span class="attr-label">{{ t("nav.skill_attributes") }}：</span>{{ tTerm("s3", weapon.s3) }}
                     </span>
                   </div>
-                  <div class="weapon-exclude-row" @click.stop>
+                  <div v-if="showWeaponOwnershipInPlans" class="weapon-exclude-row" @click.stop>
                     <label class="exclude-checkbox-label">
                       <input
                         type="checkbox"

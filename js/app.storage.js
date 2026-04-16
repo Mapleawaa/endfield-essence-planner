@@ -440,7 +440,14 @@
             state.showWeaponAttrs.value = restored.showWeaponAttrs;
           }
           if (typeof restored.showWeaponOwnership === "boolean") {
-            state.showWeaponOwnership.value = restored.showWeaponOwnership;
+            state.showWeaponOwnershipInList.value = restored.showWeaponOwnership;
+            state.showWeaponOwnershipInPlans.value = restored.showWeaponOwnership;
+          }
+          if (typeof restored.showWeaponOwnershipInList === "boolean") {
+            state.showWeaponOwnershipInList.value = restored.showWeaponOwnershipInList;
+          }
+          if (typeof restored.showWeaponOwnershipInPlans === "boolean") {
+            state.showWeaponOwnershipInPlans.value = restored.showWeaponOwnershipInPlans;
           }
           if (typeof restored.filterPanelManuallySet === "boolean") {
             state.filterPanelManuallySet.value = restored.filterPanelManuallySet;
@@ -473,6 +480,9 @@
           if (restored.filterS1) state.filterS1.value = restored.filterS1;
           if (restored.filterS2) state.filterS2.value = restored.filterS2;
           if (restored.filterS3) state.filterS3.value = restored.filterS3;
+          if (Array.isArray(restored.selectedRegions)) {
+            state.selectedRegions.value = restored.selectedRegions;
+          }
           if (
             typeof restored.equipRefiningSelectedName === "string" &&
             state.equipRefiningSelectedName
@@ -512,6 +522,36 @@
       recoveryApi.reportStorageIssue("storage.read", state.planConfigHintStorageKey, error, {
         scope: "restore-plan-config-hint",
       });
+    }
+    try {
+      const storedPlanConfigDisplayRulesHintVersion = localStorage.getItem(
+        state.planConfigDisplayRulesHintStorageKey
+      );
+      state.showPlanConfigDisplayRulesHintDot.value =
+        storedPlanConfigDisplayRulesHintVersion !== state.planConfigDisplayRulesHintVersion;
+    } catch (error) {
+      state.showPlanConfigDisplayRulesHintDot.value = true;
+      recoveryApi.reportStorageIssue(
+        "storage.read",
+        state.planConfigDisplayRulesHintStorageKey,
+        error,
+        { scope: "restore-plan-config-display-rules-hint" }
+      );
+    }
+    try {
+      const storedPlanConfigOwnershipHintVersion = localStorage.getItem(
+        state.planConfigOwnershipHintStorageKey
+      );
+      state.showPlanConfigOwnershipHintDot.value =
+        storedPlanConfigOwnershipHintVersion !== state.planConfigOwnershipHintVersion;
+    } catch (error) {
+      state.showPlanConfigOwnershipHintDot.value = true;
+      recoveryApi.reportStorageIssue(
+        "storage.read",
+        state.planConfigOwnershipHintStorageKey,
+        error,
+        { scope: "restore-plan-config-ownership-hint" }
+      );
     }
 
     try {
@@ -645,13 +685,15 @@
         schemeBaseSelections: state.schemeBaseSelections.value,
         weaponAttrOverrides: state.weaponAttrOverrides.value,
         showWeaponAttrs: state.showWeaponAttrs.value,
-        showWeaponOwnership: state.showWeaponOwnership.value,
+        showWeaponOwnershipInList: state.showWeaponOwnershipInList.value,
+        showWeaponOwnershipInPlans: state.showWeaponOwnershipInPlans.value,
         showAllSchemes: state.showAllSchemes.value,
         backgroundDisplayEnabled: state.backgroundDisplayEnabled.value,
         recommendationConfig: state.recommendationConfig.value,
         filterS1: state.filterS1.value,
         filterS2: state.filterS2.value,
         filterS3: state.filterS3.value,
+        selectedRegions: state.selectedRegions.value,
         equipRefiningSelectedName: state.equipRefiningSelectedName
           ? state.equipRefiningSelectedName.value
           : "",

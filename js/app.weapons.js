@@ -775,12 +775,6 @@
           ? ["unowned", "essenceOwned", "fourStar"].filter((key) => hiddenReasonSet.has(key))
           : [];
       const hiddenReasons = formatHiddenReasons(hiddenReasonKeys);
-      const isHiddenOnly = affectsHidden && !isEmpty && effectiveCount === 0;
-      const disabledHintLabel = isEmpty
-        ? translate("nav.none")
-        : isHiddenOnly
-          ? translate("nav.hidden")
-          : translate("nav.none");
       const disabledHintTitle = isEmpty
         ? translate("nav.no_weapons_under_current_filters")
         : hiddenReasons
@@ -793,7 +787,6 @@
         effectiveCount,
         isEmpty,
         hiddenReasons,
-        disabledHintLabel,
         disabledHintTitle,
         isDisabled: count === 0,
       };
@@ -889,8 +882,12 @@
       }
     };
 
-    const toggleShowWeaponOwnership = () => {
-      state.showWeaponOwnership.value = !state.showWeaponOwnership.value;
+    const toggleShowWeaponOwnershipInList = () => {
+      state.showWeaponOwnershipInList.value = !state.showWeaponOwnershipInList.value;
+    };
+
+    const toggleShowWeaponOwnershipInPlans = () => {
+      state.showWeaponOwnershipInPlans.value = !state.showWeaponOwnershipInPlans.value;
     };
 
     const toggleFilterPanel = () => {
@@ -919,6 +916,29 @@
       state.filterS1.value = [];
       state.filterS2.value = [];
       state.filterS3.value = [];
+    };
+
+    const isRegionSelected = (region) => {
+      const selected = state.selectedRegions.value;
+      if (!selected || !selected.length) return true;
+      return selected.includes(region);
+    };
+
+    const toggleRegionFilter = (region) => {
+      const current = state.selectedRegions.value || [];
+      const regionOptions = state.regionOptions.value || [];
+      const nextSet = new Set(current);
+      if (!current.length) {
+        regionOptions.forEach((item) => {
+          if (item !== region) nextSet.add(item);
+        });
+      } else if (current.includes(region)) {
+        nextSet.delete(region);
+      } else {
+        nextSet.add(region);
+      }
+      const next = regionOptions.filter((item) => nextSet.has(item));
+      state.selectedRegions.value = next.length === regionOptions.length ? [] : next;
     };
 
     const hasAttributeFilters = computed(
@@ -1082,7 +1102,7 @@
         return;
       }
       const containerSelector = ".weapon-list";
-      const itemSelector = ".weapon-item";
+      const itemSelector = ".weapon-grid-entry";
       const grid = document.querySelector(containerSelector);
       if (!grid) {
         weaponGridVirtual.value = {
@@ -1310,12 +1330,15 @@
     state.isEssenceOwnedForPlanning = isEssenceOwnedForPlanning;
     state.toggleWeapon = toggleWeapon;
     state.toggleShowWeaponAttrs = toggleShowWeaponAttrs;
-    state.toggleShowWeaponOwnership = toggleShowWeaponOwnership;
+    state.toggleShowWeaponOwnershipInList = toggleShowWeaponOwnershipInList;
+    state.toggleShowWeaponOwnershipInPlans = toggleShowWeaponOwnershipInPlans;
     state.toggleFilterPanel = toggleFilterPanel;
     state.clearSelection = clearSelection;
     state.toggleFilterValue = toggleFilterValue;
     state.clearAttributeFilters = clearAttributeFilters;
     state.hasAttributeFilters = hasAttributeFilters;
+    state.isRegionSelected = isRegionSelected;
+    state.toggleRegionFilter = toggleRegionFilter;
     state.filteredWeapons = filteredWeapons;
     state.visibleFilteredWeapons = visibleFilteredWeapons;
     state.hiddenInSelectorSummary = hiddenInSelectorSummary;

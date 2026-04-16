@@ -667,6 +667,12 @@
         contain-intrinsic-size: 124px 124px;
       }
 
+      .weapon-grid-entry {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
       .weapon-item:hover {
         border-color: rgba(var(--color-white-rgb), var(--alpha-35));
         transform: none;
@@ -1067,6 +1073,34 @@
         opacity: var(--alpha-80);
       }
 
+      .plan-config-section-static .plan-config-section-body {
+        border-top: none;
+      }
+
+      .plan-config-section-title-static {
+        margin-bottom: 4px;
+      }
+
+      .plan-config-rule-label-with-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .plan-config-inline-hint-dot {
+        position: static;
+        min-width: 0;
+      }
+
+      .plan-config-subtitle {
+        margin-top: 10px;
+        margin-bottom: 2px;
+      }
+
+      .plan-config-subtitle:first-child {
+        margin-top: 0;
+      }
+
       .switch-compact {
         position: relative;
         justify-content: center;
@@ -1281,6 +1315,40 @@
         user-select: none;
       }
 
+      .exclude-checkbox-label.compact {
+        padding: 1px 4px;
+        font-size: 10px;
+      }
+
+      .weapon-grid-ownership-row .exclude-checkbox-label.compact,
+      .weapon-grid-ownership-row .exclude-checkbox-label.compact:hover {
+        background: transparent;
+      }
+
+      @media (max-width: 640px) and (orientation: portrait) {
+        .weapon-grid-ownership-row {
+          flex-direction: row;
+          justify-content: center;
+          gap: 1px;
+          padding: 0;
+          margin-top: -1px;
+          align-items: center;
+          flex-wrap: nowrap;
+        }
+
+        .exclude-checkbox-label.compact {
+          gap: 2px;
+          padding: 0;
+          font-size: 8px;
+          justify-content: center;
+        }
+
+        .weapon-grid-ownership-row .exclude-checkbox {
+          width: 11px;
+          height: 11px;
+        }
+      }
+
       .exclude-checkbox-label:hover {
         background: rgba(var(--color-white-rgb), var(--alpha-08));
       }
@@ -1357,6 +1425,16 @@
 
       .weapon-item.rarity-4 .weapon-name {
         background-image: var(--rarity-4-frame);
+      }
+
+      .weapon-grid-ownership-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 2px 2px;
+        min-height: 18px;
       }
 
       .weapon-art {

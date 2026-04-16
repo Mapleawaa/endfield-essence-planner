@@ -1351,6 +1351,29 @@
         merchant_order_no_too_long: "sync.error_bad_request",
         invalid_paid_time_format: "sync.error_bad_request",
         invalid_or_expired_code: "sync.error_invalid_reset_code",
+        // ── Sync payload validation errors ──
+        invalid_base_version: "sync.error_invalid_base_version",
+        invalid_payload_structure: "sync.error_invalid_payload_structure",
+        unsupported_schema_version: "sync.error_unsupported_schema_version",
+        invalid_captured_at: "sync.error_invalid_captured_at",
+        invalid_marks_updated_at: "sync.error_invalid_marks_updated_at",
+        invalid_marks_items: "sync.error_invalid_marks_items",
+        marks_limit_exceeded: "sync.error_marks_limit_exceeded",
+        invalid_mark_name: "sync.error_invalid_mark_name",
+        invalid_mark_item: "sync.error_invalid_mark_item",
+        invalid_mark_weapon_owned: "sync.error_invalid_mark_weapon_owned",
+        invalid_mark_essence_owned: "sync.error_invalid_mark_essence_owned",
+        invalid_custom_weapons_items: "sync.error_invalid_custom_weapons_items",
+        custom_weapons_limit_exceeded: "sync.error_custom_weapons_limit_exceeded",
+        invalid_custom_weapon_name: "sync.error_invalid_custom_weapon_name",
+        custom_weapon_chars_exceeded: "sync.error_custom_weapon_chars_exceeded",
+        invalid_custom_weapon_rarity: "sync.error_invalid_custom_weapon_rarity",
+        invalid_workspace_updated_at: "sync.error_invalid_workspace_updated_at",
+        workspace_selected_names_exceeded: "sync.error_workspace_selected_names_exceeded",
+        // ── General errors ──
+        not_found: "sync.error_not_found",
+        internal_server_error: "sync.error_internal_server_error",
+        code_sent_recently: "sync.error_code_sent_recently",
       };
       const key = map[String(code || "")];
       if (key) return getSyncText(key, String(code || ""));

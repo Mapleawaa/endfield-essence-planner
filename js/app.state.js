@@ -164,6 +164,8 @@
       strictPriorityOrder: "ownershipFirst",
     });
     state.regionOptions = ref([]);
+    state.availableRegions = ref([]);
+    state.effectiveSelectedRegions = ref([]);
     state.regionPriorityModeOptions = [
       {
         value: "ignore",

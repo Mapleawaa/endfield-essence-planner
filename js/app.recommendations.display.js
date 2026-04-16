@@ -4,6 +4,11 @@
   modules.initRecommendationDisplay = function initRecommendationDisplay(ctx, state) {
     const { computed, ref, onMounted, onBeforeUnmount, watch, nextTick } = ctx;
 
+    const getEffectiveSelectedRegions = () =>
+      state.effectiveSelectedRegions && Array.isArray(state.effectiveSelectedRegions.value)
+        ? state.effectiveSelectedRegions.value
+        : [];
+
     const reorderForTutorial = (list) => {
       if (!state.tutorialActive.value || state.tutorialStepKey.value !== "base-pick") {
         return list;
@@ -21,7 +26,7 @@
       Boolean(scheme && Array.isArray(scheme.weaponRows) && scheme.weaponRows.length);
 
     const filterByRegion = (scheme) => {
-      const selected = state.selectedRegions.value;
+      const selected = getEffectiveSelectedRegions();
       if (!selected || !selected.length) return true;
       return selected.includes(scheme.dungeonRegion);
     };
@@ -250,9 +255,7 @@
       const missingNames = targetNames.filter((name) => !coveredNames.has(name));
       if (!missingNames.length) return null;
 
-      const selectedRegions = Array.isArray(state.selectedRegions.value)
-        ? state.selectedRegions.value.filter(Boolean)
-        : [];
+      const selectedRegions = getEffectiveSelectedRegions();
       const allCoveredNames = new Set();
       allSchemes.forEach((scheme) => {
         const names = Array.isArray(scheme.effectiveSelectedMatchNames)

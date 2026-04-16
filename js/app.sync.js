@@ -644,7 +644,7 @@
 
     const pushSyncToast = (tone, titleKey, summaryKey, fallbackTitle, fallbackSummary, signature, options) => {
       if (typeof state.pushToastNotice !== "function") return;
-      const summary = typeof state.t === "function"
+      const summary = summaryKey && typeof state.t === "function"
         ? state.t(summaryKey, options && options.summaryParams ? options.summaryParams : undefined)
         : fallbackSummary;
       state.pushToastNotice(
@@ -2758,7 +2758,7 @@
       const messageWithStatus = `${httpStatus}: ${message}`;
       setSyncError(messageWithStatus, errorDetails);
       if (options && options.toastOnError) {
-        pushSyncToast("danger", "sync.failure_title", "sync.failure_summary", "同步失败", messageWithStatus, `sync-failure:${messageWithStatus}`);
+        pushSyncToast("danger", "sync.failure_title", "", "同步失败", messageWithStatus, `sync-failure:${messageWithStatus}`);
       }
       return "error";
     };

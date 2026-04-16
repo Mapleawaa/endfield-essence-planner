@@ -765,6 +765,10 @@ html[data-bg-display="off"][data-theme="light"] body::after {
   color: #0a5c58;
 }
 
+[data-theme="light"] .region-filter-chips .filter-chip.is-disabled {
+  opacity: 0.35;
+}
+
 [data-theme="light"] .missing-tag {
   border-color: rgba(var(--color-danger-rgb), var(--alpha-28));
   background: rgba(var(--color-danger-rgb), var(--alpha-10));

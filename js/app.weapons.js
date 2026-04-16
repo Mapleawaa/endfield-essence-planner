@@ -918,18 +918,67 @@
       state.filterS3.value = [];
     };
 
+    const arrayShallowEqual = (left, right) => {
+      if (left === right) return true;
+      if (!Array.isArray(left) || !Array.isArray(right)) return false;
+      if (left.length !== right.length) return false;
+      for (let index = 0; index < left.length; index += 1) {
+        if (left[index] !== right[index]) return false;
+      }
+      return true;
+    };
+
+    const sanitizeRegionSelection = (selection, regionOptions) => {
+      const orderedOptions = Array.isArray(regionOptions) ? regionOptions.filter(Boolean) : [];
+      if (!orderedOptions.length) return [];
+      const selectedSet = new Set(
+        (Array.isArray(selection) ? selection : []).map((value) => String(value || "").trim()).filter(Boolean)
+      );
+      if (!selectedSet.size) return [];
+      return orderedOptions.filter((item) => selectedSet.has(item));
+    };
+
+    const normalizeRegionSelection = (selection, availableRegions, regionOptions) => {
+      const orderedOptions = Array.isArray(regionOptions) ? regionOptions.filter(Boolean) : [];
+      const orderedAvailable = sanitizeRegionSelection(availableRegions, orderedOptions);
+      if (!orderedAvailable.length) return [];
+      const selected = sanitizeRegionSelection(selection, orderedOptions);
+      if (!selected.length) return [];
+      const selectedSet = new Set(selected);
+      const effective = orderedAvailable.filter((item) => selectedSet.has(item));
+      if (!effective.length || effective.length === orderedAvailable.length) return [];
+      return effective;
+    };
+
+    const getAvailableRegions = () =>
+      sanitizeRegionSelection(
+        state.availableRegions && Array.isArray(state.availableRegions.value) ? state.availableRegions.value : [],
+        state.regionOptions && Array.isArray(state.regionOptions.value) ? state.regionOptions.value : []
+      );
+
+    const effectiveSelectedRegions = computed(() =>
+      normalizeRegionSelection(
+        state.selectedRegions.value,
+        getAvailableRegions(),
+        state.regionOptions && Array.isArray(state.regionOptions.value) ? state.regionOptions.value : []
+      )
+    );
+
     const isRegionSelected = (region) => {
-      const selected = state.selectedRegions.value;
-      if (!selected || !selected.length) return true;
+      const available = getAvailableRegions();
+      if (!available.includes(region)) return false;
+      const selected = effectiveSelectedRegions.value;
+      if (!selected.length) return true;
       return selected.includes(region);
     };
 
     const toggleRegionFilter = (region) => {
-      const current = state.selectedRegions.value || [];
-      const regionOptions = state.regionOptions.value || [];
+      const available = getAvailableRegions();
+      if (!available.includes(region)) return;
+      const current = effectiveSelectedRegions.value || [];
       const nextSet = new Set(current);
       if (!current.length) {
-        regionOptions.forEach((item) => {
+        available.forEach((item) => {
           if (item !== region) nextSet.add(item);
         });
       } else if (current.includes(region)) {
@@ -937,8 +986,8 @@
       } else {
         nextSet.add(region);
       }
-      const next = regionOptions.filter((item) => nextSet.has(item));
-      state.selectedRegions.value = next.length === regionOptions.length ? [] : next;
+      const next = available.filter((item) => nextSet.has(item));
+      state.selectedRegions.value = !next.length || next.length === available.length ? [] : next;
     };
 
     const hasAttributeFilters = computed(
@@ -1253,6 +1302,33 @@
         if (!shouldAutoOpen) return;
         openWeaponAttrDataModal();
       }
+    );
+
+    watch(
+      [
+        () => getAvailableRegions().slice(),
+        () => (Array.isArray(state.selectedRegions.value) ? state.selectedRegions.value.slice() : []),
+      ],
+      ([available, selected]) => {
+        if (!available.length) return;
+        const normalized = normalizeRegionSelection(
+          selected,
+          available,
+          state.regionOptions && Array.isArray(state.regionOptions.value) ? state.regionOptions.value : []
+        );
+        if (arrayShallowEqual(selected, normalized)) return;
+        state.selectedRegions.value = normalized;
+      },
+      { immediate: true }
+    );
+
+    watch(
+      effectiveSelectedRegions,
+      (value) => {
+        if (!state.effectiveSelectedRegions || typeof state.effectiveSelectedRegions !== "object") return;
+        state.effectiveSelectedRegions.value = Array.isArray(value) ? value.slice() : [];
+      },
+      { immediate: true }
     );
 
     watch(

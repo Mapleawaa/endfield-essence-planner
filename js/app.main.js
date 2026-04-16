@@ -1161,15 +1161,7 @@ return { view: "planner" };
         return query ? `?${query}` : "";
       };
 
-      const legacyScrollbarHiddenViews = new Set([
-        "planner",
-        "match",
-        "strategy",
-        "editor",
-        "equip-refining",
-        "rerun-ranking",
-        "background",
-      ]);
+      const legacyScrollbarHiddenViews = new Set([]);
       const syncLegacyScrollbarMode = () => {
         if (typeof document === "undefined" || !document.documentElement) return;
         const root = document.documentElement;
@@ -1665,6 +1657,7 @@ return { view: "planner" };
         isWeaponRawAttrMissingField: state.isWeaponRawAttrMissingField,
         recommendationConfig: state.recommendationConfig,
         regionOptions: state.regionOptions,
+        availableRegions: state.availableRegions,
         showBackToTop: state.showBackToTop,
         scrollToTop: state.scrollToTop,
         tutorialActive: state.tutorialActive,

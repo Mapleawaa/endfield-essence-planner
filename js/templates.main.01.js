@@ -921,7 +921,11 @@
                 v-for="region in regionOptions"
                 :key="'region-filter-' + region"
                 class="filter-chip"
-                :class="{ 'is-active': isRegionSelected(region) }"
+                :class="{ 
+                  'is-active': isRegionSelected(region),
+                  'is-disabled': !availableRegions.includes(region)
+                }"
+                :disabled="!availableRegions.includes(region)"
                 @click="toggleRegionFilter(region)"
               >
                 {{ tTerm("dungeon", region) }}

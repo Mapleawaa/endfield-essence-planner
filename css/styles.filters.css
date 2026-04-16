@@ -312,3 +312,9 @@
         color: #e0f4ff;
       }
 
+      .region-filter-chips .filter-chip.is-disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+

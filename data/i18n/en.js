@@ -162,7 +162,8 @@ window.I18N["en"] = {
       "四号谷地·矿脉源区": "Valley IV - Origin Lodespring",
       "武陵": "Wuling",
       "武陵·武陵城": "Wuling - Wuling City",
-      "武陵·清波寨": "Wuling - Qingbo Stockade"
+      "武陵·清波寨": "Wuling - Qingbo Stockade",
+      "武陵·首墩": "Wuling - Shoudun"
     },
     "weapon": {
       "不知归": "Never Rest",

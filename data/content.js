@@ -1,13 +1,13 @@
 window.CONTENT = {
   gameCompat: {
-    supportedVersion: "1.1",
-    nextVersion: "1.2",
-    nextVersionAt: "2026-04-17T00:00:00Z",
+    supportedVersion: "1.2",
+    nextVersion: "1.3",
+    nextVersionAt: "2026-05-22T00:00:00Z",
   },
   announcement: {
     version: "1.1.9",
     title: "nav.announcement",
-    date: "2026-04-15",
+    date: "2026-04-16",
     //用完记得改回去
     forceModal: true,
     qqGroup: "1045523485",
@@ -22,6 +22,12 @@ window.CONTENT = {
   changelog: {
     title: "nav.changelog",
     entries: [
+      {
+        date: "2026-04-17",
+        items: [
+          "增加1.2新装备",
+        ],
+      },
       {
         date: "2026-04-16",
         items: [

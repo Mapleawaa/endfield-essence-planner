@@ -83,6 +83,10 @@
         filter: none;
       }
 
+      html[data-bg-blur="off"] body::after {
+        background: transparent;
+      }
+
       html.bg-image-fading-in body::before {
         opacity: var(--alpha-30);
       }

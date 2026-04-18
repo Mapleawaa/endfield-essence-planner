@@ -980,6 +980,8 @@ Object.assign(window.I18N["zh-CN"].strings, {
   "sync.email_change_unverified_hint": "当前邮箱尚未验证时，可直接改为新邮箱，系统会向新邮箱发送验证邮件。",
   "sync.download_background": "下载网站背景",
   "sync.account_rights_title": "账号权益",
+  "sync.current_plan_label": "当前计划：",
+  "sync.current_plan_expires_at_label": "计划到期时间：",
   "sync.rights_plan_free_title": "免费计划",
   "sync.rights_plan_trial_title": "体验计划",
   "sync.rights_plan_member_title": "会员计划",

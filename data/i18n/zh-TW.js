@@ -1031,6 +1031,8 @@ Object.assign(window.I18N["zh-TW"].strings, {
   "sync.email_change_unverified_hint": "目前信箱尚未驗證時，可直接改為新信箱，系統會向新信箱發送驗證郵件。",
   "sync.download_background": "下載網站背景",
   "sync.account_rights_title": "帳號權益",
+  "sync.current_plan_label": "目前方案：",
+  "sync.current_plan_expires_at_label": "方案到期時間：",
   "sync.rights_plan_free_title": "免費方案",
   "sync.rights_plan_trial_title": "體驗方案",
   "sync.rights_plan_member_title": "會員方案",

@@ -707,6 +707,15 @@
                   {{ t("sync.summary_version", { version: syncRemoteSummary.version }) }}
                 </div>
               </div>
+              <div class="sync-login-summary">
+                <div class="sync-login-summary-title">{{ t("sync.account_rights_title") }}</div>
+                <div class="sync-login-summary-row">
+                  <span class="sync-login-summary-item">{{ t("sync.current_plan_label") }}{{ syncCurrentPlanLabel }}</span>
+                </div>
+                <div v-if="syncCurrentPlanHasExpiry" class="sync-login-summary-row sync-login-summary-meta">
+                  {{ t("sync.current_plan_expires_at_label") }}{{ syncCurrentPlanExpiresDisplay }}
+                </div>
+              </div>
 
               <!-- 冲突处理面板 -->
               <div v-if="syncConflictDetected" class="sync-login-summary sync-login-summary-warning">
@@ -734,15 +743,15 @@
               <div class="sync-rights-section">
                 <div class="sync-login-summary-title">{{ t("sync.account_rights_title") }}</div>
                 <div class="sync-rights-plans">
-                  <div class="sync-rights-plan-card">
+                  <div class="sync-rights-plan-card" :class="{ 'is-active': syncCurrentPlanKey === 'free' }">
                     <div class="sync-rights-plan-name">{{ t("sync.rights_plan_free_title") }}</div>
                     <div class="sync-hint-text">{{ t("sync.rights_plan_free_desc") }}</div>
                   </div>
-                  <div class="sync-rights-plan-card">
+                  <div class="sync-rights-plan-card" :class="{ 'is-active': syncCurrentPlanKey === 'trial' }">
                     <div class="sync-rights-plan-name">{{ t("sync.rights_plan_trial_title") }}</div>
                     <div class="sync-hint-text">{{ t("sync.rights_plan_trial_desc") }}</div>
                   </div>
-                  <div class="sync-rights-plan-card sync-rights-plan-member">
+                  <div class="sync-rights-plan-card" :class="{ 'is-active': syncCurrentPlanKey === 'member' }">
                     <div class="sync-rights-plan-name">{{ t("sync.rights_plan_member_title") }}</div>
                     <div class="sync-hint-text">{{ t("sync.rights_plan_member_desc") }}</div>
                   </div>
@@ -805,7 +814,7 @@
                     <div class="sync-rights-price">¥14.25</div>
                     <div class="sync-rights-price-discount">{{ t("sync.membership_plan_quarter_discount") }}</div>
                   </div>
-                  <div class="sync-rights-price-card sync-rights-plan-card-member">
+                  <div class="sync-rights-price-card">
                     <div class="sync-rights-plan-name">{{ t("sync.membership_plan_year") }}</div>
                     <div class="sync-rights-price">¥54.00</div>
                     <div class="sync-rights-price-discount">{{ t("sync.membership_plan_year_discount") }}</div>

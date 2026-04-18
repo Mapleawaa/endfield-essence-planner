@@ -1031,6 +1031,8 @@ Object.assign(window.I18N["ja"].strings, {
   "sync.email_change_unverified_hint": "現在のメールが未認証の場合、新しいメールアドレスへ直接切り替えて、そちらへ認証メールを送信できます。",
   "sync.download_background": "背景画像をダウンロード",
   "sync.account_rights_title": "アカウント特典",
+  "sync.current_plan_label": "現在のプラン: ",
+  "sync.current_plan_expires_at_label": "プラン終了時刻: ",
   "sync.rights_plan_free_title": "無料プラン",
   "sync.rights_plan_trial_title": "体験プラン",
   "sync.rights_plan_member_title": "会員プラン",

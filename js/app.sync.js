@@ -1990,6 +1990,27 @@
       return formatted || raw || "-";
     };
 
+    const getFutureTime = (value) => {
+      const raw = String(value || "").trim();
+      if (!raw) return 0;
+      const time = new Date(raw).getTime();
+      if (!Number.isFinite(time)) return 0;
+      return time > Date.now() ? time : 0;
+    };
+
+    const resolveSyncPlanKey = (user) => {
+      if (!user || typeof user !== "object") return "free";
+      if (getFutureTime(user.premium_until) > 0) return "member";
+      if (getFutureTime(user.premium_trial_until) > 0) return "trial";
+      return "free";
+    };
+
+    const getSyncPlanLabelKey = (planKey) => {
+      if (planKey === "member") return "sync.rights_plan_member_title";
+      if (planKey === "trial") return "sync.rights_plan_trial_title";
+      return "sync.rights_plan_free_title";
+    };
+
     const closeSyncPasswordModal = () => {
       if (state.syncShowPasswordModal && "value" in state.syncShowPasswordModal) {
         state.syncShowPasswordModal.value = false;
@@ -3608,6 +3629,25 @@
     );
     state.syncLastSyncedDisplay = computed(() => formatSyncDateTime(state.syncLastSyncedAt.value));
     state.syncRemoteUpdatedDisplay = computed(() => formatSyncDateTime(state.syncRemoteUpdatedAt.value));
+    state.syncCurrentPlanKey = computed(() => resolveSyncPlanKey(state.syncUser.value));
+    state.syncCurrentPlanLabel = computed(() =>
+      getSyncText(
+        getSyncPlanLabelKey(state.syncCurrentPlanKey.value),
+        state.syncCurrentPlanKey.value === "member"
+          ? "会员计划"
+          : state.syncCurrentPlanKey.value === "trial"
+            ? "体验计划"
+            : "免费计划"
+      )
+    );
+    state.syncCurrentPlanExpiresDisplay = computed(() => {
+      const user = state.syncUser.value;
+      const planKey = state.syncCurrentPlanKey.value;
+      if (!user || planKey === "free") return "";
+      const raw = planKey === "member" ? user.plan_expires_at || user.premium_until : user.premium_trial_until;
+      return raw ? formatClaimTime(raw) : "";
+    });
+    state.syncCurrentPlanHasExpiry = computed(() => Boolean(state.syncCurrentPlanExpiresDisplay.value));
     state.syncAutoSyncText = computed(() => {
       const dueAt = Number(state.syncAutoSyncDueAt.value || 0);
       const seconds = dueAt > 0 ? getAutoSyncRemainingSeconds() : Math.round(autoSyncDelayMs / 1000);

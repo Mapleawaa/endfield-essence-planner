@@ -1268,6 +1268,16 @@
         background: rgba(var(--color-accent-rgb), var(--alpha-06));
       }
 
+      .sync-rights-plan-card.is-active {
+        border-color: rgba(var(--color-accent-rgb), var(--alpha-46));
+        background: rgba(var(--color-accent-rgb), var(--alpha-10));
+        box-shadow: 0 0 0 1px rgba(var(--color-accent-rgb), var(--alpha-18));
+      }
+
+      .sync-rights-plan-card.is-active .sync-rights-plan-name {
+        color: var(--accent);
+      }
+
       .sync-rights-plan-name {
         font-size: 12px;
         font-weight: 600;

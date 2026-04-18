@@ -1011,6 +1011,8 @@ Object.assign(window.I18N["en"].strings, {
   "sync.email_change_unverified_hint": "When the current email is still unverified, you can directly switch to a new email and send a new verification email there.",
   "sync.download_background": "Download Background",
   "sync.account_rights_title": "Account Rights",
+  "sync.current_plan_label": "Current plan: ",
+  "sync.current_plan_expires_at_label": "Plan expires at: ",
   "sync.rights_plan_free_title": "Free Plan",
   "sync.rights_plan_trial_title": "Trial Plan",
   "sync.rights_plan_member_title": "Member Plan",

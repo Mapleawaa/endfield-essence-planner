@@ -471,6 +471,9 @@
           if (typeof restored.backgroundDisplayEnabled === "boolean") {
             state.backgroundDisplayEnabled.value = restored.backgroundDisplayEnabled;
           }
+          if (typeof restored.backgroundBlurEnabled === "boolean") {
+            state.backgroundBlurEnabled.value = restored.backgroundBlurEnabled;
+          }
           if (restored.recommendationConfig) {
             state.recommendationConfig.value = restored.recommendationConfig;
           }
@@ -522,21 +525,6 @@
       recoveryApi.reportStorageIssue("storage.read", state.planConfigHintStorageKey, error, {
         scope: "restore-plan-config-hint",
       });
-    }
-    try {
-      const storedPlanConfigDisplayRulesHintVersion = localStorage.getItem(
-        state.planConfigDisplayRulesHintStorageKey
-      );
-      state.showPlanConfigDisplayRulesHintDot.value =
-        storedPlanConfigDisplayRulesHintVersion !== state.planConfigDisplayRulesHintVersion;
-    } catch (error) {
-      state.showPlanConfigDisplayRulesHintDot.value = true;
-      recoveryApi.reportStorageIssue(
-        "storage.read",
-        state.planConfigDisplayRulesHintStorageKey,
-        error,
-        { scope: "restore-plan-config-display-rules-hint" }
-      );
     }
     try {
       const storedPlanConfigOwnershipHintVersion = localStorage.getItem(
@@ -689,6 +677,7 @@
         showWeaponOwnershipInPlans: state.showWeaponOwnershipInPlans.value,
         showAllSchemes: state.showAllSchemes.value,
         backgroundDisplayEnabled: state.backgroundDisplayEnabled.value,
+        backgroundBlurEnabled: state.backgroundBlurEnabled.value,
         recommendationConfig: state.recommendationConfig.value,
         filterS1: state.filterS1.value,
         filterS2: state.filterS2.value,

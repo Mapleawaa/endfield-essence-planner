@@ -884,10 +884,16 @@
 
     const toggleShowWeaponOwnershipInList = () => {
       state.showWeaponOwnershipInList.value = !state.showWeaponOwnershipInList.value;
+      if (typeof state.markPlanConfigOwnershipHintSeen === "function") {
+        state.markPlanConfigOwnershipHintSeen();
+      }
     };
 
     const toggleShowWeaponOwnershipInPlans = () => {
       state.showWeaponOwnershipInPlans.value = !state.showWeaponOwnershipInPlans.value;
+      if (typeof state.markPlanConfigOwnershipHintSeen === "function") {
+        state.markPlanConfigOwnershipHintSeen();
+      }
     };
 
     const toggleFilterPanel = () => {
@@ -910,6 +916,19 @@
       } else {
         target.value.splice(index, 1);
       }
+    };
+
+    const toggleDropdown = (group) => {
+      const isOpen = group === "s1" ? state.dropdownOpenS1 : group === "s2" ? state.dropdownOpenS2 : state.dropdownOpenS3;
+      state.dropdownOpenS1.value = group === "s1" ? !isOpen.value : false;
+      state.dropdownOpenS2.value = group === "s2" ? !isOpen.value : false;
+      state.dropdownOpenS3.value = group === "s3" ? !isOpen.value : false;
+    };
+
+    const closeAllDropdowns = () => {
+      state.dropdownOpenS1.value = false;
+      state.dropdownOpenS2.value = false;
+      state.dropdownOpenS3.value = false;
     };
 
     const clearAttributeFilters = () => {
@@ -1243,6 +1262,13 @@
       return rows.every((weapon) => selected.has(weapon.name));
     });
 
+    const allWeaponsSelected = computed(() => {
+      const all = catalogWeapons.value;
+      if (!all.length) return false;
+      const selected = selectedNameSet.value;
+      return all.every((weapon) => selected.has(weapon.name));
+    });
+
     const selectAllWeapons = () => {
       const rows = filteredWeapons.value;
       if (!rows.length) return;
@@ -1411,6 +1437,8 @@
     state.toggleFilterPanel = toggleFilterPanel;
     state.clearSelection = clearSelection;
     state.toggleFilterValue = toggleFilterValue;
+    state.toggleDropdown = toggleDropdown;
+    state.closeAllDropdowns = closeAllDropdowns;
     state.clearAttributeFilters = clearAttributeFilters;
     state.hasAttributeFilters = hasAttributeFilters;
     state.isRegionSelected = isRegionSelected;
@@ -1422,6 +1450,7 @@
     state.weaponUpBadgeMemoKey = weaponUpBadgeMemoKey;
     state.getSelectorHiddenReason = getSelectorHiddenReason;
     state.allFilteredSelected = allFilteredSelected;
+    state.allWeaponsSelected = allWeaponsSelected;
     state.selectAllWeapons = selectAllWeapons;
     state.dismissAttrHint = dismissAttrHint;
   };

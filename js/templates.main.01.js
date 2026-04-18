@@ -6,52 +6,40 @@
           <h1>{{ t("nav.endfield_essence_planner") }}</h1>
         </div>
         <div class="hero-actions">
-          <div class="lang-switch" ref="langSwitchRef" @click.stop>
-            <button
-              class="lang-button"
-              type="button"
-              aria-label="Language"
-              aria-haspopup="listbox"
-              :aria-expanded="showLangMenu ? 'true' : 'false'"
-              @click="toggleLangMenu"
-            >
-              <span class="lang-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                  <circle cx="12" cy="12" r="9"></circle>
-                  <path d="M3 12h18"></path>
-                  <path d="M12 3a13 13 0 0 1 0 18"></path>
-                  <path d="M12 3a13 13 0 0 0 0 18"></path>
-                </svg>
-              </span>
-              <span class="lang-label">Language</span>
-            </button>
-            <div v-if="showLangMenu" class="lang-menu" :class="'align-' + langMenuPlacement" role="listbox">
-              <button
-                v-for="option in languageOptions"
-                :key="option.value"
-                class="lang-option"
-                :class="{ active: option.value === locale }"
-                role="option"
-                :aria-selected="option.value === locale"
-                @click="setLocale(option.value)"
-              >
-                {{ option.label }}
-              </button>
-            </div>
-          </div>
-          <div class="theme-switch" @click.stop>
-            <label class="theme-label" for="theme-mode-select">{{ t("nav.theme") }}</label>
-            <select
-              id="theme-mode-select"
-              class="theme-select"
-              :value="themePreference"
-              @change="setThemeMode($event.target.value)"
-            >
-              <option value="auto">{{ t("nav.auto") }}</option>
-              <option value="light">{{ t("nav.light") }}</option>
-              <option value="dark">{{ t("nav.dark") }}</option>
-            </select>
-          </div>
+          <a
+            class="site-feedback-banner"
+            href="https://wj.qq.com/s2/26332435/z16l/"
+            target="_blank"
+            rel="noreferrer noopener"
+            :aria-label="t('siteFeedback.ariaLabel')"
+          >
+            <span class="site-feedback-label">{{ t("siteFeedback.label") }}</span>
+          </a>
+          <button
+            class="theme-toggle"
+            type="button"
+            :aria-label="themePreference === 'auto' ? t('nav.auto') : (themePreference === 'light' ? t('nav.light') : t('nav.dark'))"
+            @click="setThemeMode(themePreference === 'auto' ? 'light' : themePreference === 'light' ? 'dark' : 'auto')"
+          >
+            <svg v-if="themePreference === 'light'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2"></path>
+              <path d="M12 20v2"></path>
+              <path d="m4.93 4.93 1.41 1.41"></path>
+              <path d="m17.66 17.66 1.41 1.41"></path>
+              <path d="M2 12h2"></path>
+              <path d="M20 12h2"></path>
+              <path d="m6.34 17.66-1.41 1.41"></path>
+              <path d="m19.07 4.93-1.41 1.41"></path>
+            </svg>
+            <svg v-else-if="themePreference === 'dark'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21a9 9 0 1 0 0-18v18z" fill="currentColor" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+          </button>
           <button
             v-if="syncRegionAccessMode !== 'hidden' && syncRegionAccessMode !== 'cn-blocked'"
             class="about-button login-button profile-entry-button"
@@ -92,18 +80,67 @@
             </span>
             <span class="profile-entry-label">{{ t("sync.cn_region_unavailable_action") }}</span>
           </button>
+          <button
+            class="lang-button"
+            type="button"
+            aria-label="Language"
+            @click="cycleLocale"
+          >
+            <span class="lang-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M3 12h18"></path>
+                <path d="M12 3a13 13 0 0 1 0 18"></path>
+                <path d="M12 3a13 13 0 0 0 0 18"></path>
+              </svg>
+            </span>
+            <span class="lang-label">{{ languageOptions.find(o => o.value === locale)?.label || locale.toUpperCase() }}</span>
+          </button>
           <div class="secondary-menu">
             <button class="about-button menu-toggle" @click="showSecondaryMenu = !showSecondaryMenu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="16" height="16">
+                <line x1="4" x2="20" y1="6" y2="6"></line>
+                <line x1="4" x2="20" y1="12" y2="12"></line>
+                <line x1="4" x2="20" y1="18" y2="18"></line>
+              </svg>
               {{ t("nav.more_tools") }}
             </button>
             <div v-if="showSecondaryMenu" class="secondary-panel">
               <div class="secondary-item">
                 <div class="secondary-label">{{ t("nav.quick_links") }}</div>
-                <div class="secondary-actions">
-                  <button class="about-button secondary-shortcut" @click="openNotice(); showSecondaryMenu = false">{{ t("nav.announcement") }}</button>
-                  <button class="about-button secondary-shortcut" @click="openChangelog(); showSecondaryMenu = false">{{ t("nav.changelog") }}</button>
-                  <button class="about-button secondary-shortcut" @click="openFaq(); showSecondaryMenu = false">FAQ</button>
-                  <button class="about-button secondary-shortcut" @click="openAbout(); showSecondaryMenu = false">{{ t("nav.about") }}</button>
+                <div class="secondary-actions secondary-grid">
+                  <button class="secondary-action-btn" @click="openNotice(); showSecondaryMenu = false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="secondary-action-label">{{ t("nav.announcement") }}</span>
+                  </button>
+                  <button class="secondary-action-btn" @click="openChangelog(); showSecondaryMenu = false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span class="secondary-action-label">{{ t("nav.changelog") }}</span>
+                  </button>
+                  <button class="secondary-action-btn" @click="openFaq(); showSecondaryMenu = false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span class="secondary-action-label">FAQ</span>
+                  </button>
+                  <button class="secondary-action-btn" @click="openAbout(); showSecondaryMenu = false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span class="secondary-action-label">{{ t("nav.about") }}</span>
+                  </button>
                 </div>
               </div>
               <div class="secondary-item">
@@ -142,6 +179,23 @@
                       : t("button.when_disabled_only_a_plain_color_background_is_shown")
                   }}
                 </div>
+              </div>
+              <div class="secondary-item">
+                <div class="secondary-label">{{ t("nav.background_blur") }}</div>
+                <button
+                  class="ghost-button toggle-button switch-toggle"
+                  :class="{ 'is-active': backgroundBlurEnabled }"
+                  role="switch"
+                  :aria-checked="backgroundBlurEnabled ? 'true' : 'false'"
+                  :disabled="!backgroundDisplayEnabled || lowGpuEnabled"
+                  @click="toggleBackgroundBlurEnabled"
+                >
+                  <span class="switch-label">{{ backgroundBlurEnabled ? t("nav.enabled") : t("button.disabled") }}</span>
+                  <span class="switch-track" :class="{ on: backgroundBlurEnabled }">
+                    <span class="switch-thumb"></span>
+                  </span>
+                </button>
+                <div class="secondary-hint">{{ t("button.when_disabled_background_image_will_not_be_blurred") }}</div>
               </div>
               <div class="secondary-item">
                 <div class="secondary-label">{{ t("nav.background_image") }}</div>
@@ -268,17 +322,6 @@
           </nav>
         </div>
       </header>
-      <section class="site-feedback-banner" aria-label="问卷入口">
-        <span class="site-feedback-label">我们诚邀您填写网站调研问卷，感谢您抽出宝贵时间作答：</span>
-        <a
-          class="about-button site-feedback-link"
-          href="https://wj.qq.com/s2/26332435/z16l/"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          问卷跳转
-        </a>
-      </section>
       <section
         v-if="heroAdBannerEnabled && (!syncAuthenticated || (syncUser && !syncUser.ad_free))"
         class="hero-ad-banner"
@@ -344,47 +387,6 @@
         <section class="panel" :class="{ 'panel-hidden': mobilePanel !== 'weapons' }">
           <div class="panel-title">
             <h2>{{ t("nav.weapon_selector") }}</h2>
-            <div v-if="isPortrait" class="panel-actions">
-              <plan-config-control
-                :t="t"
-                :t-term="tTerm"
-                :recommendation-config="recommendationConfig"
-                :show-plan-config="showPlanConfig"
-                :show-plan-config-hint-dot="showPlanConfigHintDot"
-                :show-plan-config-display-rules-hint-dot="showPlanConfigDisplayRulesHintDot"
-                :show-plan-config-ownership-hint-dot="showPlanConfigOwnershipHintDot"
-                :is-plan-config-section-collapsed="isPlanConfigSectionCollapsed"
-                :toggle-plan-config-section-collapsed="togglePlanConfigSectionCollapsed"
-                :show-weapon-attrs="showWeaponAttrs"
-                :show-weapon-ownership-in-list="showWeaponOwnershipInList"
-                :show-weapon-ownership-in-plans="showWeaponOwnershipInPlans"
-                :toggle-show-weapon-ownership-in-list="toggleShowWeaponOwnershipInList"
-                :toggle-show-weapon-ownership-in-plans="toggleShowWeaponOwnershipInPlans"
-                :mark-plan-config-display-rules-hint-seen="markPlanConfigDisplayRulesHintSeen"
-                :mark-plan-config-ownership-hint-seen="markPlanConfigOwnershipHintSeen"
-                :export-weapon-marks="exportWeaponMarks"
-                :handle-marks-import-file="handleMarksImportFile"
-                :marks-import-file-name="marksImportFileName"
-                :marks-import-summary="marksImportSummary"
-                :marks-import-error="marksImportError"
-                :region-options="regionOptions"
-                :t-region-priority-mode-options="tRegionPriorityModeOptions"
-                :t-ownership-priority-mode-options="tOwnershipPriorityModeOptions"
-                :t-strict-priority-order-options="tStrictPriorityOrderOptions"
-                :weapon-attr-s1-options="weaponAttrS1Options"
-                :weapon-attr-s2-options="weaponAttrS2Options"
-                :weapon-attr-s3-options="weaponAttrS3Options"
-                :custom-weapons="customWeapons"
-                :custom-weapon-draft="customWeaponDraft"
-                :custom-weapon-error="customWeaponError"
-                :add-custom-weapon="addCustomWeapon"
-                :remove-custom-weapon="removeCustomWeapon"
-                :reset-custom-weapon-draft="resetCustomWeaponDraft"
-                :has-preview-weapons="hasPreviewWeapons"
-                :open-weapon-attr-data-modal="openWeaponAttrDataModal"
-                @toggle="togglePlanConfig"
-              ></plan-config-control>
-            </div>
           </div>
 
           <div class="weapon-list-anchor" aria-hidden="true"></div>
@@ -440,103 +442,84 @@
               {{ t("button.view_data_exception_details") }}
             </button>
           </div>
-          <div class="filter-panel" :class="{ 'is-collapsed': !showFilterPanel }">
-            <div class="filter-group">
-              <div class="filter-title">{{ t("nav.base_attributes") }}</div>
-              <div class="filter-chips">
+          <div class="filter-panel-compact" :class="{ 'is-collapsed': !showFilterPanel }">
+            <div class="filter-grid-group">
+              <div class="filter-grid-header">
+                <span class="filter-grid-label">{{ t("nav.base_attributes") }}</span>
+                <span v-if="filterS1.length > 0" class="filter-grid-badge">{{ filterS1.length }}</span>
+              </div>
+              <div class="filter-grid-options">
                 <button
                   v-for="option in s1Options"
                   :key="option.value"
-                  class="filter-chip"
+                  type="button"
+                  class="filter-grid-item"
                   :class="{
                     'is-active': filterS1.includes(option.value),
                     'is-disabled': option.isDisabled && !filterS1.includes(option.value),
                   }"
-                  :title="
-                    option.isDisabled && !filterS1.includes(option.value)
-                      ? option.disabledHintTitle
-                      : ''
-                  "
-                  @click="
-                    option.isDisabled && !filterS1.includes(option.value)
-                      ? null
-                      : toggleFilterValue('s1', option.value)
-                  "
+                  :disabled="option.isDisabled && !filterS1.includes(option.value)"
+                  :title="option.isDisabled && !filterS1.includes(option.value) ? option.disabledHintTitle : ''"
+                  @click="toggleFilterValue('s1', option.value)"
                 >
-                  <span>{{ formatS1(option.value) }}</span>
+                  {{ formatS1(option.value) }}
                 </button>
               </div>
             </div>
-            <div class="filter-group">
-              <div class="filter-title">{{ t("nav.extra_attributes") }}</div>
-              <div class="filter-chips">
+            <div class="filter-grid-group">
+              <div class="filter-grid-header">
+                <span class="filter-grid-label">{{ t("nav.extra_attributes") }}</span>
+                <span v-if="filterS2.length > 0" class="filter-grid-badge">{{ filterS2.length }}</span>
+              </div>
+              <div class="filter-grid-options">
                 <button
                   v-for="option in s2Options"
                   :key="option.value"
-                  class="filter-chip"
+                  type="button"
+                  class="filter-grid-item"
                   :class="{
                     'is-active': filterS2.includes(option.value),
                     'is-disabled': option.isDisabled && !filterS2.includes(option.value),
                   }"
-                  :title="
-                    option.isDisabled && !filterS2.includes(option.value)
-                      ? option.disabledHintTitle
-                      : ''
-                  "
-                  @click="
-                    option.isDisabled && !filterS2.includes(option.value)
-                      ? null
-                      : toggleFilterValue('s2', option.value)
-                  "
+                  :disabled="option.isDisabled && !filterS2.includes(option.value)"
+                  :title="option.isDisabled && !filterS2.includes(option.value) ? option.disabledHintTitle : ''"
+                  @click="toggleFilterValue('s2', option.value)"
                 >
-                  <span>{{ tTerm("s2", option.value) }}</span>
+                  {{ tTerm("s2", option.value) }}
                 </button>
               </div>
             </div>
-            <div class="filter-group">
-              <div class="filter-title">{{ t("nav.skill_attributes") }}</div>
-              <div class="filter-chips">
+            <div class="filter-grid-group">
+              <div class="filter-grid-header">
+                <span class="filter-grid-label">{{ t("nav.skill_attributes") }}</span>
+                <span v-if="filterS3.length > 0" class="filter-grid-badge">{{ filterS3.length }}</span>
+              </div>
+              <div class="filter-grid-options">
                 <button
                   v-for="option in s3OptionEntries"
                   :key="option.value"
-                  class="filter-chip"
+                  type="button"
+                  class="filter-grid-item"
                   :class="{
                     'is-active': filterS3.includes(option.value),
                     'is-disabled': option.isDisabled && !filterS3.includes(option.value),
                   }"
-                  :title="
-                    option.isDisabled && !filterS3.includes(option.value)
-                      ? option.disabledHintTitle
-                      : ''
-                  "
-                  @click="
-                    option.isDisabled && !filterS3.includes(option.value)
-                      ? null
-                      : toggleFilterValue('s3', option.value)
-                  "
+                  :disabled="option.isDisabled && !filterS3.includes(option.value)"
+                  :title="option.isDisabled && !filterS3.includes(option.value) ? option.disabledHintTitle : ''"
+                  @click="toggleFilterValue('s3', option.value)"
                 >
-                  <span>{{ tTerm("s3", option.value) }}</span>
+                  {{ tTerm("s3", option.value) }}
                 </button>
               </div>
-              <div class="filter-hint">{{ t("error.gray_attributes_mean_no_weapons_under_current_filters") }}</div>
+              <div class="filter-grid-hint">{{ t("error.gray_attributes_mean_no_weapons_under_current_filters") }}</div>
             </div>
           </div>
 
           <div class="tag-row">
-            <div class="tag-list">
-              <span v-if="!selectedNames.length" class="tag tag-empty">{{ t("nav.no_weapons_selected") }}</span>
-              <span
-                v-for="weapon in selectedWeaponRows"
-                :key="weapon.name"
-                class="tag"
-                :class="{ 'is-unowned': weapon.isUnowned, 'is-essence-owned': weapon.isEssenceOwned }"
-                :title="weapon.note ? \`\${t('nav.note')}\${weapon.note}\` : ''"
-              >
-                <span class="tag-name">{{ tTerm("weapon", weapon.name) }}</span>
-                <span v-if="weapon.isUnowned" class="tag-note is-unowned">{{ t("nav.not_owned") }}</span>
-                <span v-if="weapon.isEssenceOwned" class="tag-note is-essence-owned">{{ t("nav.essence_owned") }}</span>
-                <button @click.stop="toggleWeapon(weapon)">✕</button>
-              </span>
+            <div class="selected-weapons-summary">
+              <span v-if="!selectedNames.length" class="selected-weapons-summary-empty">{{ t("nav.no_weapons_selected") }}</span>
+              <span v-else-if="allWeaponsSelected" class="selected-weapons-summary-text">{{ t("nav.selected_all_weapons") }}</span>
+              <span v-else class="selected-weapons-summary-text">{{ t("nav.selected_weapons_line", { count: selectedNames.length, names: selectedWeaponRows.map(w => tTerm('weapon', w.name)).join(t('nav.separator_enum')) }) }}</span>
             </div>
             <div class="tag-actions">
               <button
@@ -743,6 +726,7 @@
                 filterS3.includes(weapon.s3),
                 getWeaponNote(weapon.name),
                 selectorHiddenMemoKey,
+                showWeaponOwnershipInList,
               ]"
               :class="{
                 'is-selected': selectedNameSet.has(weapon.name),
@@ -856,49 +840,49 @@
           </div>
         </section>
 
-        <section class="panel" :class="{ 'panel-hidden': mobilePanel !== 'plans' }">
+        <plan-config-panel
+          v-show="mobilePanel === 'plans' || !isPortrait"
+          :t="t"
+          :t-term="tTerm"
+          :recommendation-config="recommendationConfig"
+          :show-plan-config="showPlanConfig"
+          :show-plan-config-hint-dot="showPlanConfigHintDot"
+          :show-plan-config-ownership-hint-dot="showPlanConfigOwnershipHintDot"
+          :is-plan-config-section-collapsed="isPlanConfigSectionCollapsed"
+          :toggle-plan-config-section-collapsed="togglePlanConfigSectionCollapsed"
+          :show-weapon-attrs="showWeaponAttrs"
+          :show-weapon-ownership-in-list="showWeaponOwnershipInList"
+          :show-weapon-ownership-in-plans="showWeaponOwnershipInPlans"
+          :toggle-show-weapon-ownership-in-list="toggleShowWeaponOwnershipInList"
+          :toggle-show-weapon-ownership-in-plans="toggleShowWeaponOwnershipInPlans"
+          :mark-plan-config-ownership-hint-seen="markPlanConfigOwnershipHintSeen"
+          :export-weapon-marks="exportWeaponMarks"
+          :handle-marks-import-file="handleMarksImportFile"
+          :marks-import-file-name="marksImportFileName"
+          :marks-import-summary="marksImportSummary"
+          :marks-import-error="marksImportError"
+          :region-options="regionOptions"
+          :t-region-priority-mode-options="tRegionPriorityModeOptions"
+          :t-ownership-priority-mode-options="tOwnershipPriorityModeOptions"
+          :t-strict-priority-order-options="tStrictPriorityOrderOptions"
+          :weapon-attr-s1-options="weaponAttrS1Options"
+          :weapon-attr-s2-options="weaponAttrS2Options"
+          :weapon-attr-s3-options="weaponAttrS3Options"
+          :custom-weapons="customWeapons"
+          :custom-weapon-draft="customWeaponDraft"
+          :custom-weapon-error="customWeaponError"
+          :add-custom-weapon="addCustomWeapon"
+          :remove-custom-weapon="removeCustomWeapon"
+          :reset-custom-weapon-draft="resetCustomWeaponDraft"
+          :has-preview-weapons="hasPreviewWeapons"
+          :open-weapon-attr-data-modal="openWeaponAttrDataModal"
+          @toggle="togglePlanConfig"
+        ></plan-config-panel>
+
+        <section class="panel" :class="{ 'panel-hidden': mobilePanel !== 'plans' || showPlanConfig }" v-show="!showPlanConfig">
           <div class="panel-title">
             <h2>{{ t("nav.plan_recommendations") }}</h2>
             <div class="panel-actions">
-              <plan-config-control
-                :t="t"
-                :t-term="tTerm"
-                :recommendation-config="recommendationConfig"
-                :show-plan-config="showPlanConfig"
-                :show-plan-config-hint-dot="showPlanConfigHintDot"
-                :show-plan-config-display-rules-hint-dot="showPlanConfigDisplayRulesHintDot"
-                :show-plan-config-ownership-hint-dot="showPlanConfigOwnershipHintDot"
-                :is-plan-config-section-collapsed="isPlanConfigSectionCollapsed"
-                :toggle-plan-config-section-collapsed="togglePlanConfigSectionCollapsed"
-                :show-weapon-attrs="showWeaponAttrs"
-                :show-weapon-ownership-in-list="showWeaponOwnershipInList"
-                :show-weapon-ownership-in-plans="showWeaponOwnershipInPlans"
-                :toggle-show-weapon-ownership-in-list="toggleShowWeaponOwnershipInList"
-                :toggle-show-weapon-ownership-in-plans="toggleShowWeaponOwnershipInPlans"
-                :mark-plan-config-display-rules-hint-seen="markPlanConfigDisplayRulesHintSeen"
-                :mark-plan-config-ownership-hint-seen="markPlanConfigOwnershipHintSeen"
-                :export-weapon-marks="exportWeaponMarks"
-                :handle-marks-import-file="handleMarksImportFile"
-                :marks-import-file-name="marksImportFileName"
-                :marks-import-summary="marksImportSummary"
-                :marks-import-error="marksImportError"
-                :region-options="regionOptions"
-                :t-region-priority-mode-options="tRegionPriorityModeOptions"
-                :t-ownership-priority-mode-options="tOwnershipPriorityModeOptions"
-                :t-strict-priority-order-options="tStrictPriorityOrderOptions"
-                :weapon-attr-s1-options="weaponAttrS1Options"
-                :weapon-attr-s2-options="weaponAttrS2Options"
-                :weapon-attr-s3-options="weaponAttrS3Options"
-                :custom-weapons="customWeapons"
-                :custom-weapon-draft="customWeaponDraft"
-                :custom-weapon-error="customWeaponError"
-                :add-custom-weapon="addCustomWeapon"
-                :remove-custom-weapon="removeCustomWeapon"
-                :reset-custom-weapon-draft="resetCustomWeaponDraft"
-                :has-preview-weapons="hasPreviewWeapons"
-                :open-weapon-attr-data-modal="openWeaponAttrDataModal"
-                @toggle="togglePlanConfig"
-              ></plan-config-control>
               <div class="pill">{{ t("nav.selected") }} {{ selectedCount }} / {{ t("nav.pending") }} {{ pendingCount }} {{ t("nav.weapons_2") }}</div>
               <button
                 v-if="extraRecommendations.length"
@@ -913,6 +897,13 @@
               </button>
             </div>
           </div>
+
+          <plan-config-control
+            :t="t"
+            :show-plan-config="showPlanConfig"
+            :show-plan-config-hint-dot="showPlanConfigHintDot"
+            @toggle="togglePlanConfig"
+          ></plan-config-control>
 
           <div v-if="selectedCount && regionOptions.length > 1" class="region-filter-bar">
             <span class="region-filter-label">{{ t("filter.region_filter") }}</span>
@@ -994,9 +985,13 @@
                   <span class="lock-chip" :class="{ warn: fallbackPlan.baseOverflow }">
                     {{ fallbackPlan.baseOverflow ? t("nav.base_attribute_conflict") : t("nav.base_attributes") }}：
                     {{
-                      (fallbackPlan.baseOverflow ? fallbackPlan.baseAllLabels : fallbackPlan.basePickLabels).join(
-                        " / "
-                      )
+                      (fallbackPlan.baseOverflow ? fallbackPlan.baseAllLabels : fallbackPlan.basePickLabels)
+                        .map(label => label.type === 'manual_pick'
+                          ? t('manual_pick')
+                          : label.type === 'any_attribute'
+                            ? tTerm('misc', 'any_attribute')
+                            : formatS1(label.value))
+                        .join(" / ")
                     }}
                   </span>
                   <span class="lock-chip warn" v-if="fallbackPlan.s2Conflict">
@@ -1025,6 +1020,7 @@
                     isUnowned(weapon.name),
                     isEssenceOwned(weapon.name),
                     getWeaponNote(weapon.name),
+                    showWeaponOwnershipInPlans,
                   ]"
                 >
                   <div class="scheme-weapon-title">

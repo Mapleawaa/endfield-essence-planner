@@ -315,6 +315,10 @@
     typeof appTemplates.planConfigControl === "string" && appTemplates.planConfigControl.trim()
       ? appTemplates.planConfigControl.trim()
       : "<div></div>";
+  const planConfigPanelTemplate =
+    typeof appTemplates.planConfigPanel === "string" && appTemplates.planConfigPanel.trim()
+      ? appTemplates.planConfigPanel.trim()
+      : "<div></div>";
   const equipRefiningListTemplate =
     typeof appTemplates.equipRefiningList === "string" && appTemplates.equipRefiningList.trim()
       ? appTemplates.equipRefiningList.trim()
@@ -356,17 +360,25 @@
   const planConfigControl = {
     props: {
       t: { type: Function, required: true },
+      showPlanConfig: { type: Boolean, required: true },
+      showPlanConfigHintDot: { type: Boolean, required: true },
+    },
+    emits: ["toggle"],
+    template: planConfigTemplate,
+  };
+
+  const planConfigPanel = {
+    props: {
+      t: { type: Function, required: true },
       recommendationConfig: { type: Object, required: true },
       showPlanConfig: { type: Boolean, required: true },
       showPlanConfigHintDot: { type: Boolean, required: true },
-      showPlanConfigDisplayRulesHintDot: { type: Boolean, required: true },
       showPlanConfigOwnershipHintDot: { type: Boolean, required: true },
       showWeaponAttrs: { type: Boolean, required: true },
       showWeaponOwnershipInList: { type: Boolean, required: true },
       showWeaponOwnershipInPlans: { type: Boolean, required: true },
       toggleShowWeaponOwnershipInList: { type: Function, required: true },
       toggleShowWeaponOwnershipInPlans: { type: Function, required: true },
-      markPlanConfigDisplayRulesHintSeen: { type: Function, required: true },
       markPlanConfigOwnershipHintSeen: { type: Function, required: true },
       exportWeaponMarks: { type: Function, required: true },
       handleMarksImportFile: { type: Function, required: true },
@@ -424,7 +436,7 @@
         return error.fallback || String(key || "");
       },
     },
-    template: planConfigTemplate,
+    template: planConfigPanelTemplate,
   };
 
   const matchStatusLine = {
@@ -1187,6 +1199,14 @@ return { view: "planner" };
         target.style.overflowY = contentHeight > maxHeight ? "auto" : "hidden";
       };
 
+      const notePopoverKey = ref(null);
+      const toggleNotePopover = (weaponName) => {
+        notePopoverKey.value = notePopoverKey.value === weaponName ? null : weaponName;
+      };
+      const closeNotePopover = () => {
+        notePopoverKey.value = null;
+      };
+
       const syncQuery = (replace = false) => {
         if (typeof window === "undefined") return;
         if (applyingRoute) return;
@@ -1207,6 +1227,15 @@ return { view: "planner" };
         syncLegacyScrollbarMode();
       };
 
+      const handleDocumentClick = (event) => {
+        const target = event && event.target;
+        if (!target || !target.closest) return;
+        const isDropdownClick = target.closest(".filter-dropdown-wrapper");
+        if (!isDropdownClick && state.closeAllDropdowns) {
+          state.closeAllDropdowns();
+        }
+      };
+
       onMounted(() => {
         const route = parseRoute();
         applyRoute(route);
@@ -1215,11 +1244,17 @@ return { view: "planner" };
         if (typeof window !== "undefined") {
           window.addEventListener("popstate", onPopState);
         }
+        if (typeof document !== "undefined") {
+          document.addEventListener("click", handleDocumentClick);
+        }
       });
 
       onBeforeUnmount(() => {
         if (typeof window !== "undefined") {
           window.removeEventListener("popstate", onPopState);
+        }
+        if (typeof document !== "undefined") {
+          document.removeEventListener("click", handleDocumentClick);
         }
         if (typeof document === "undefined" || !document.documentElement) return;
         document.documentElement.classList.remove("legacy-scrollbar-hidden");
@@ -1239,6 +1274,20 @@ return { view: "planner" };
         syncLegacyScrollbarMode();
         syncQuery(false);
       });
+
+      watch(
+        () => {
+          const selectedNames = state.selectedNames;
+          return selectedNames && Array.isArray(selectedNames.value) ? selectedNames.value.length : 0;
+        },
+        (len) => {
+          const showSelectedWeaponsPopup = state.showSelectedWeaponsPopup;
+          if (!showSelectedWeaponsPopup) return;
+          if (len <= 5 && showSelectedWeaponsPopup.value) {
+            showSelectedWeaponsPopup.value = false;
+          }
+        }
+      );
 
       const parseExceptionTime = (value) => {
         const time = Date.parse(String(value || ""));
@@ -1574,6 +1623,7 @@ return { view: "planner" };
         langMenuPlacement: state.langMenuPlacement,
         toggleLangMenu: state.toggleLangMenu,
         setLocale: state.setLocale,
+        cycleLocale: state.cycleLocale,
         t: state.t,
         tTerm: state.tTerm,
         localeRenderVersion: state.localeRenderVersion,
@@ -1612,7 +1662,6 @@ return { view: "planner" };
         showPlanConfig: state.showPlanConfig,
         showWeaponAttrDataModal: state.showWeaponAttrDataModal,
         showPlanConfigHintDot: state.showPlanConfigHintDot,
-        showPlanConfigDisplayRulesHintDot: state.showPlanConfigDisplayRulesHintDot,
         showPlanConfigOwnershipHintDot: state.showPlanConfigOwnershipHintDot,
         marksImportError: state.marksImportError,
         marksImportFileName: state.marksImportFileName,
@@ -1626,10 +1675,11 @@ return { view: "planner" };
         confirmMarksImport: state.confirmMarksImport,
         formatSourceInfo,
         showEquipRefiningNavHintDot: state.showEquipRefiningNavHintDot,
+
+
         showRerunRankingNavHintDot: state.showRerunRankingNavHintDot,
         showEditorEntry: state.showEditorEntry,
         togglePlanConfig: state.togglePlanConfig,
-        markPlanConfigDisplayRulesHintSeen: state.markPlanConfigDisplayRulesHintSeen,
         markPlanConfigOwnershipHintSeen: state.markPlanConfigOwnershipHintSeen,
         isPlanConfigSectionCollapsed: state.isPlanConfigSectionCollapsed,
         togglePlanConfigSectionCollapsed: state.togglePlanConfigSectionCollapsed,
@@ -1700,6 +1750,9 @@ return { view: "planner" };
         filterS1: state.filterS1,
         filterS2: state.filterS2,
         filterS3: state.filterS3,
+        dropdownOpenS1: state.dropdownOpenS1,
+        dropdownOpenS2: state.dropdownOpenS2,
+        dropdownOpenS3: state.dropdownOpenS3,
         s1Options: state.s1Options,
         s2Options: state.s2Options,
         s3OptionEntries: state.s3OptionEntries,
@@ -1710,6 +1763,8 @@ return { view: "planner" };
         hasRerunRankingRows: state.hasRerunRankingRows,
         rerunRankingGeneratedAt: state.rerunRankingGeneratedAt,
         toggleFilterValue: state.toggleFilterValue,
+        toggleDropdown: state.toggleDropdown,
+        closeAllDropdowns: state.closeAllDropdowns,
         clearAttributeFilters: state.clearAttributeFilters,
         hasAttributeFilters: state.hasAttributeFilters,
         isRegionSelected: state.isRegionSelected,
@@ -1721,6 +1776,7 @@ return { view: "planner" };
         weaponGridTopSpacer: state.weaponGridTopSpacer,
         weaponGridBottomSpacer: state.weaponGridBottomSpacer,
         allFilteredSelected: state.allFilteredSelected,
+        allWeaponsSelected: state.allWeaponsSelected,
         recommendations: state.recommendations,
         recommendationDataIssue: state.recommendationDataIssue,
         recommendationEmptyReason: state.recommendationEmptyReason,
@@ -2021,6 +2077,7 @@ return { view: "planner" };
         syncAutoSyncEnabled: state.syncAutoSyncEnabled,
         syncIsLocalhostMode: state.syncIsLocalhostMode,
         syncShowDevPanel: state.syncShowDevPanel,
+        syncDevExpanded: state.syncDevExpanded,
         syncApiBaseInput: state.syncApiBaseInput,
         syncDevHeaderNameInput: state.syncDevHeaderNameInput,
         syncDevHeaderValueInput: state.syncDevHeaderValueInput,
@@ -2062,7 +2119,9 @@ return { view: "planner" };
         customBackgroundError: state.customBackgroundError,
         customBackgroundApi: state.customBackgroundApi,
         backgroundDisplayEnabled: state.backgroundDisplayEnabled,
+        backgroundBlurEnabled: state.backgroundBlurEnabled,
         toggleBackgroundDisplayEnabled: state.toggleBackgroundDisplayEnabled,
+        toggleBackgroundBlurEnabled: state.toggleBackgroundBlurEnabled,
         handleBackgroundFile: state.handleBackgroundFile,
         clearCustomBackground: state.clearCustomBackground,
         // Strategy Module
@@ -2398,6 +2457,7 @@ return { view: "planner" };
   });
 
   app.component("PlanConfigControl", planConfigControl);
+  app.component("PlanConfigPanel", planConfigPanel);
   app.component("MatchStatusLine", matchStatusLine);
   app.component("MarkdownText", markdownText);
   app.component("EquipRefiningList", equipRefiningList);

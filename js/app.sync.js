@@ -228,6 +228,11 @@
 
     const startEmailActionCooldown = (kind, seconds) => {
       applyCooldownSeconds(kind, seconds);
+      if (kind === 'verify') {
+        applyCooldownSeconds('change', seconds);
+      } else if (kind === 'change') {
+        applyCooldownSeconds('verify', seconds);
+      }
     };
 
     const getEmailActionCooldownRemaining = (kind) => {
@@ -1337,7 +1342,7 @@
         missing_token: "sync.error_missing_token",
         email_already_verified: "sync.error_email_already_verified",
         missing_code: "sync.error_missing_verification_code",
-        no_pending_email: "sync.error_no_pending_email",
+        no_email: "sync.error_no_pending_email",
         version_conflict: "sync.error_conflict",
         invalid_json: "sync.error_invalid_payload",
         user_not_found: "sync.error_invalid_session",
@@ -1351,28 +1356,6 @@
         merchant_order_no_too_long: "sync.error_bad_request",
         invalid_paid_time_format: "sync.error_bad_request",
         invalid_or_expired_code: "sync.error_invalid_reset_code",
-        // ── Sync payload validation errors ──
-        invalid_base_version: "sync.error_invalid_base_version",
-        invalid_payload_structure: "sync.error_invalid_payload_structure",
-        unsupported_schema_version: "sync.error_unsupported_schema_version",
-        invalid_captured_at: "sync.error_invalid_captured_at",
-        invalid_marks_updated_at: "sync.error_invalid_marks_updated_at",
-        invalid_marks_items: "sync.error_invalid_marks_items",
-        marks_limit_exceeded: "sync.error_marks_limit_exceeded",
-        invalid_mark_name: "sync.error_invalid_mark_name",
-        invalid_mark_item: "sync.error_invalid_mark_item",
-        invalid_mark_weapon_owned: "sync.error_invalid_mark_weapon_owned",
-        invalid_mark_essence_owned: "sync.error_invalid_mark_essence_owned",
-        invalid_custom_weapons_items: "sync.error_invalid_custom_weapons_items",
-        custom_weapons_limit_exceeded: "sync.error_custom_weapons_limit_exceeded",
-        invalid_custom_weapon_name: "sync.error_invalid_custom_weapon_name",
-        custom_weapon_chars_exceeded: "sync.error_custom_weapon_chars_exceeded",
-        invalid_custom_weapon_rarity: "sync.error_invalid_custom_weapon_rarity",
-        invalid_workspace_updated_at: "sync.error_invalid_workspace_updated_at",
-        workspace_selected_names_exceeded: "sync.error_workspace_selected_names_exceeded",
-        // ── General errors ──
-        not_found: "sync.error_not_found",
-        internal_server_error: "sync.error_internal_server_error",
         code_sent_recently: "sync.error_code_sent_recently",
       };
       const key = map[String(code || "")];
@@ -2191,11 +2174,8 @@
         const currentEmail = state.syncUser && state.syncUser.value && state.syncUser.value.email
           ? String(state.syncUser.value.email).trim().toLowerCase()
           : '';
-        const pendingEmail = state.syncUser && state.syncUser.value && state.syncUser.value.pending_email
-          ? String(state.syncUser.value.pending_email).trim().toLowerCase()
-          : '';
         const normalizedNextEmail = String(nextEmail || '').trim().toLowerCase();
-        if (normalizedNextEmail === currentEmail || (pendingEmail && normalizedNextEmail === pendingEmail)) {
+        if (normalizedNextEmail === currentEmail) {
           const message = createSyncTextEntry('sync.error_email_unchanged', '新邮箱不能与当前邮箱相同。');
           state.syncEmailActionError.value = resolveSyncEntry(message).text;
           setSyncError(message);
@@ -3680,6 +3660,7 @@
     );
     state.syncIsLocalhostMode = computed(() => isLocalhostFrontend());
     state.syncShowDevPanel = computed(() => isLocalhostFrontend() && runtimeEnv !== "production");
+    state.syncDevExpanded = ref(false);
     state.syncFrontendBlocked = computed(() => !isSyncFrontendAllowed());
     state.syncFrontendBlockedMessage = computed(() =>
       isSyncFrontendAllowed() ? "" : resolveSyncEntry(getSyncFrontendBlockedEntry()).text

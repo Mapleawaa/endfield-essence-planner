@@ -1015,7 +1015,7 @@ Object.assign(window.I18N["zh-TW"].strings, {
   "sync.region_detection_failed_action": "地區檢測失敗",
   "sync.region_detection_failed_title": "地區檢測失敗，我們無法確定是否可以為你提供服務，請稍後重新整理再試",
   "sync.cn_region_unavailable_summary": "目前站點在中國大陸地區不開放登入、同步與雲端存檔服務。",
-  "sync.mainland_service_redirect_notice_prefix": "因不可抗力因素(被告警整改,做不了用戶互動),end.canmoe.com 的線上同步/登入功能無法向中國大陸提供服務,如需使用請使用非中國大陸IP訪問或訪問",
+  "sync.mainland_service_redirect_notice_prefix": "因不可抗力因素,end.canmoe.com 的線上同步/登入功能無法向中國大陸提供服務,如需使用請使用非中國大陸IP訪問或訪問",
   "sync.international_site_action": "國際站(國際站可向任意地區用戶提供雲端服務,但訪問速度可能略慢)",
   "sync.sponsor_link_action": "贊助商連結",
   "sync.send_verification_code_action": "發送驗證碼",

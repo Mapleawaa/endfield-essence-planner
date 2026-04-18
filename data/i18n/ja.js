@@ -1015,7 +1015,7 @@ Object.assign(window.I18N["ja"].strings, {
   "sync.region_detection_failed_action": "地域判定失敗",
   "sync.region_detection_failed_title": "地域判定に失敗したため、現在サービス提供可否を判定できません。しばらくしてから再読み込みしてください。",
   "sync.cn_region_unavailable_summary": "現在のサイトでは、中国本土地域向けにログイン、同期、クラウド保存サービスを提供していません。",
-  "sync.mainland_service_redirect_notice_prefix": "不可抗力の事情により(警告を受けて整改中,ユーザー対話機能を提供できない),end.canmoe.com のオンライン同期/ログイン機能は中国本土向けに提供できません。利用する場合は中国本土以外のIPでアクセスするか、",
+  "sync.mainland_service_redirect_notice_prefix": "不可抗力の事情により,end.canmoe.com のオンライン同期/ログイン機能は中国本土向けに提供できません。利用する場合は中国本土以外のIPでアクセスするか、",
   "sync.international_site_action": "国際版サイト(世界中のユーザーにクラウドサービスを提供可能ですが、アクセス速度が少し遅くなる場合があります)",
   "sync.sponsor_link_action": "スポンサーリンク",
   "sync.send_verification_code_action": "認証コードを送信",

@@ -995,7 +995,7 @@ Object.assign(window.I18N["en"].strings, {
   "sync.region_detection_failed_action": "Region Check Failed",
   "sync.region_detection_failed_title": "Region detection failed. We cannot determine whether service is available for you right now. Please refresh and try again later.",
   "sync.cn_region_unavailable_summary": "This site does not provide sign-in, sync, or cloud save services in mainland China.",
-  "sync.mainland_service_redirect_notice_prefix": "Due to force majeure (received整改警告, unable to provide user interaction), online sync/sign-in on end.canmoe.com is unavailable to mainland China. To use these features, access from a non-mainland-China IP or visit the ",
+  "sync.mainland_service_redirect_notice_prefix": "Due to force majeure, online sync/sign-in on end.canmoe.com is unavailable to mainland China. To use these features, access from a non-mainland-China IP or visit the ",
   "sync.international_site_action": "international site (available to users worldwide, but may be slightly slower)",
   "sync.sponsor_link_action": "Sponsor Link",
   "sync.send_verification_code_action": "Send Code",

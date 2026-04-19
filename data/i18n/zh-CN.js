@@ -799,6 +799,7 @@ Object.assign(window.I18N["zh-CN"].strings, {
   "sync.account_disabled_title": "账号已禁用",
   "sync.error_account_disabled": "该账号已被禁用，请联系管理员处理。",
   "sync.error_invalid_username": "用户名只能使用 3-24 位字母、数字或下划线。",
+  "sync.error_username_taken": "该用户名已被占用。",
   "sync.error_weak_password": "密码至少需要 6 位。",
   "sync.error_invalid_current_password": "当前密码不正确。",
   "sync.error_unauthorized": "请先登录。",

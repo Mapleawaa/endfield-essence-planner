@@ -172,6 +172,10 @@
     <p class="equip-refining-recommend-tip" v-else>
       {{ t("equip_refining.recommend_other_equip") }}
     </p>
+    <p v-if="recommendation.materialFilterNoticeKey" class="equip-refining-recommend-warning">
+      <span class="equip-refining-recommend-warning-icon" aria-hidden="true">⚠️</span>
+      <span>{{ t(recommendation.materialFilterNoticeKey) }}</span>
+    </p>
     <div class="weapon-list equip-refining-candidate-list">
       <div
         v-for="candidate in visibleCandidates"
@@ -222,6 +226,36 @@
 >
   <div class="panel-title">
     <h2>{{ t("equip_refining.recommendation_title") }}</h2>
+  </div>
+  <div class="equip-refining-filter-panel">
+    <div class="equip-refining-filter-head">
+      <span class="secondary-label">{{ t("equip_refining.material_filters") }}</span>
+      <span class="equip-refining-filter-actions">
+        <button
+          type="button"
+          class="ghost-button equip-refining-filter-clear"
+          @click="clearMaterialFilters"
+        >
+          {{ t("equip_refining.clear_filters") }}
+        </button>
+      </span>
+    </div>
+    <div class="equip-refining-filter-body">
+      <div class="equip-refining-filter-group">
+        <div class="equip-refining-filter-grid">
+          <button
+            v-for="option in filterOptionEntries.material"
+            :key="'equip-filter-material-' + option.value"
+            type="button"
+            class="filter-grid-item"
+            :class="{ 'is-active': filterMaterial.includes(option.value) }"
+            @click="toggleFilterValue('material', option.value)"
+          >
+            {{ option.value }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
   <div v-if="!selectedEquip" class="empty-state match-empty">
     <h2>{{ t("equip_refining.select_one_equip") }}</h2>

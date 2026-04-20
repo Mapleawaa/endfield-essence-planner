@@ -101,6 +101,7 @@
     const equipRefiningFilterSub1 = ref([]);
     const equipRefiningFilterSub2 = ref([]);
     const equipRefiningFilterSpecial = ref([]);
+    const equipRefiningFilterMaterial = ref([]);
     const isEquipRefiningCompact = ref(false);
     const equipRefiningMobileListScrollY = ref(0);
     const recommendationRowCapacity = ref(1);
@@ -245,6 +246,14 @@
     const equipRefiningSpecialOptions = uniqueSortedAttrKeys(
       equipList.map((equip) => equip && equip.special && equip.special.key)
     );
+    // Keep material options in first-seen order from equip.js (low -> high by data order).
+    const equipRefiningMaterialOptions = Array.from(
+      new Set(
+        source
+          .map((equip) => String((equip && equip.material) || "").trim())
+          .filter(Boolean)
+      )
+    );
 
     const matchesEquipRefiningAttrFilters = (equip, filters) => {
       const sub1Selected = Array.isArray(filters && filters.sub1) ? filters.sub1 : [];
@@ -273,6 +282,7 @@
         sub1: equipRefiningFilterSub1,
         sub2: equipRefiningFilterSub2,
         special: equipRefiningFilterSpecial,
+        material: equipRefiningFilterMaterial,
       };
       const targetRef = map[key];
       if (!targetRef) return;
@@ -292,6 +302,9 @@
 
     const toggleEquipRefiningFilterPanelCollapsed = () => {
       equipRefiningFilterPanelCollapsed.value = !equipRefiningFilterPanelCollapsed.value;
+    };
+    const clearEquipRefiningMaterialFilters = () => {
+      equipRefiningFilterMaterial.value = [];
     };
 
     const buildEquipRefiningOptionEntries = (allEquips, currentFilters, selectedValues, field) => {
@@ -423,6 +436,7 @@
         sub1: buildEquipRefiningOptionEntries(equipList, filters, filters.sub1, "sub1"),
         sub2: buildEquipRefiningOptionEntries(equipList, filters, filters.sub2, "sub2"),
         special: buildEquipRefiningOptionEntries(equipList, filters, filters.special, "special"),
+        material: equipRefiningMaterialOptions.map((value) => ({ value })),
       };
     });
 
@@ -455,6 +469,7 @@
           slotLabel: slotInfo.label,
           targetAttr: null,
           recommendSelf: true,
+          materialFilterNoticeKey: "",
           topValueDisplay: "",
           candidates: [],
         };
@@ -465,6 +480,7 @@
           slotLabel: slotInfo.label,
           targetAttr,
           recommendSelf: true,
+          materialFilterNoticeKey: "",
           topValueDisplay: targetAttr.display,
           candidates: [
             {
@@ -477,36 +493,84 @@
         };
       }
 
-      const candidates = [];
-      for (let i = 0; i < equipList.length; i += 1) {
-        const candidateEquip = equipList[i];
-        if (candidateEquip.name === equip.name) continue;
-        if (candidateEquip.part !== equip.part) continue;
-        const bestMatch = getCandidateBestMatch(candidateEquip, targetAttr);
-        if (!bestMatch) continue;
-        candidates.push({
-          equip: candidateEquip,
-          matchAttr: bestMatch.matchAttr,
-          matchSlotKey: bestMatch.matchSlotKey,
-          matchSlotLabel: slotLabelMap[bestMatch.matchSlotKey] || bestMatch.matchSlotKey,
-        });
-      }
+      const selectedMaterials = Array.isArray(equipRefiningFilterMaterial.value)
+        ? equipRefiningFilterMaterial.value
+        : [];
+      const selfMaterial = String((equip && equip.material) || "").trim();
+      const shouldIncludeSelf =
+        selectedMaterials.length === 0 || !selfMaterial || selectedMaterials.includes(selfMaterial);
+      const selfCandidate = {
+        equip,
+        matchAttr: targetAttr,
+        matchSlotKey: slotInfo.key,
+        matchSlotLabel: slotInfo.label,
+      };
+      const collectCandidates = (materials) => {
+        const next = [];
+        const hasMaterialFilter = Array.isArray(materials) && materials.length > 0;
+        for (let i = 0; i < equipList.length; i += 1) {
+          const candidateEquip = equipList[i];
+          if (hasMaterialFilter) {
+            const material = String((candidateEquip && candidateEquip.material) || "").trim();
+            if (material && !materials.includes(material)) continue;
+          }
+          if (candidateEquip.name === equip.name) continue;
+          if (candidateEquip.part !== equip.part) continue;
+          const bestMatch = getCandidateBestMatch(candidateEquip, targetAttr);
+          if (!bestMatch) continue;
+          next.push({
+            equip: candidateEquip,
+            matchAttr: bestMatch.matchAttr,
+            matchSlotKey: bestMatch.matchSlotKey,
+            matchSlotLabel: slotLabelMap[bestMatch.matchSlotKey] || bestMatch.matchSlotKey,
+          });
+        }
+        return next;
+      };
+      const maxMatchValue = (items) => {
+        let max = null;
+        for (let i = 0; i < items.length; i += 1) {
+          const value = items[i] && items[i].matchAttr && items[i].matchAttr.value;
+          if (!Number.isFinite(value)) continue;
+          if (max == null || value > max) max = value;
+        }
+        return max;
+      };
+      const allCandidates = collectCandidates([]);
+      const candidates = selectedMaterials.length
+        ? collectCandidates(selectedMaterials)
+        : allCandidates;
+      const allBestValue = maxMatchValue(allCandidates);
+      const filteredBestValue = maxMatchValue(candidates);
+      const effectiveFilteredBestValue =
+        shouldIncludeSelf && Number.isFinite(targetAttr.value)
+          ? (filteredBestValue == null ? targetAttr.value : Math.max(filteredBestValue, targetAttr.value))
+          : filteredBestValue;
+      const resolveMaterialFilterNoticeKey = (finalCandidates) => {
+        if (!selectedMaterials.length) return "";
+        if (!Array.isArray(finalCandidates) || finalCandidates.length === 0) {
+          return "equip_refining.material_filter_no_candidate";
+        }
+        if (
+          Number.isFinite(allBestValue) &&
+          Number.isFinite(effectiveFilteredBestValue) &&
+          effectiveFilteredBestValue < allBestValue
+        ) {
+          return "equip_refining.material_filter_may_miss_best";
+        }
+        return "";
+      };
 
       if (!candidates.length) {
+        const finalCandidates = shouldIncludeSelf ? [selfCandidate] : [];
         return {
           slotKey: slotInfo.key,
           slotLabel: slotInfo.label,
           targetAttr,
           recommendSelf: true,
+          materialFilterNoticeKey: resolveMaterialFilterNoticeKey(finalCandidates),
           topValueDisplay: targetAttr.display,
-          candidates: [
-            {
-              equip,
-              matchAttr: targetAttr,
-              matchSlotKey: slotInfo.key,
-              matchSlotLabel: slotInfo.label,
-            },
-          ],
+          candidates: finalCandidates,
         };
       }
 
@@ -526,6 +590,7 @@
           slotLabel: slotInfo.label,
           targetAttr,
           recommendSelf: false,
+          materialFilterNoticeKey: resolveMaterialFilterNoticeKey(sortedCandidates),
           topValueDisplay: sortedCandidates[0] ? sortedCandidates[0].matchAttr.display : "",
           candidates: sortedCandidates,
         };
@@ -535,23 +600,18 @@
         .filter((item) => item.matchAttr.value === currentValue)
         .sort((a, b) => compareText(a.equip.name, b.equip.name));
 
-      const allSameCandidates = [
-        {
-          equip,
-          matchAttr: targetAttr,
-          matchSlotKey: slotInfo.key,
-          matchSlotLabel: slotInfo.label,
-        },
-        ...sameCandidates,
-      ];
+      const sameCandidatesWithSelf = shouldIncludeSelf
+        ? [selfCandidate, ...sameCandidates]
+        : sameCandidates;
 
       return {
         slotKey: slotInfo.key,
         slotLabel: slotInfo.label,
         targetAttr,
         recommendSelf: true,
+        materialFilterNoticeKey: resolveMaterialFilterNoticeKey(sameCandidatesWithSelf),
         topValueDisplay: targetAttr.display,
-        candidates: allSameCandidates,
+        candidates: sameCandidatesWithSelf,
       };
     };
 
@@ -644,11 +704,13 @@
     state.equipRefiningFilterSub1 = equipRefiningFilterSub1;
     state.equipRefiningFilterSub2 = equipRefiningFilterSub2;
     state.equipRefiningFilterSpecial = equipRefiningFilterSpecial;
+    state.equipRefiningFilterMaterial = equipRefiningFilterMaterial;
     state.equipRefiningFilterOptionEntries = equipRefiningFilterOptionEntries;
     state.equipRefiningFilterPanelCollapsed = equipRefiningFilterPanelCollapsed;
     state.toggleEquipRefiningFilterValue = toggleEquipRefiningFilterValue;
     state.clearEquipRefiningFilters = clearEquipRefiningFilters;
     state.toggleEquipRefiningFilterPanelCollapsed = toggleEquipRefiningFilterPanelCollapsed;
+    state.clearEquipRefiningMaterialFilters = clearEquipRefiningMaterialFilters;
     state.selectedEquipRefiningEquipName = selectedEquipRefiningEquipName;
     state.selectedEquipRefiningEquip = selectedEquipRefiningEquip;
     state.selectEquipRefiningEquip = selectEquipRefiningEquip;

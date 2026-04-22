@@ -1341,6 +1341,37 @@
       { deep: true }
     );
 
+    const pruneHiddenSelectedWeapons = () => {
+      const selectedNames = Array.isArray(state.selectedNames.value) ? state.selectedNames.value : [];
+      if (!selectedNames.length) return;
+      const config = state.recommendationConfig.value || {};
+      const next = selectedNames.filter((name) => {
+        const weapon = getCatalogWeaponByName(name);
+        if (!weapon) return false;
+        return !shouldHideInSelector(weapon, config);
+      });
+      if (next.length !== selectedNames.length) {
+        state.selectedNames.value = next;
+      }
+    };
+
+    watch(
+      () => {
+        const marks = state.weaponMarks.value || {};
+        const config = state.recommendationConfig.value || {};
+        return [
+          JSON.stringify(marks),
+          config.hideEssenceOwnedWeaponsInSelector ? 1 : 0,
+          config.hideEssenceOwnedOwnedOnly ? 1 : 0,
+          config.hideUnownedWeaponsInSelector ? 1 : 0,
+          config.hideFourStarWeaponsInSelector ? 1 : 0,
+          config.attributeFilterAffectsHiddenWeapons ? 1 : 0,
+        ].join("|");
+      },
+      pruneHiddenSelectedWeapons,
+      { immediate: true }
+    );
+
     let previousSelectedNameSet = new Set(
       Array.isArray(state.selectedNames.value) ? state.selectedNames.value : []
     );

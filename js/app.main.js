@@ -1183,7 +1183,7 @@ return { view: "planner" };
         return query ? `?${query}` : "";
       };
 
-      const legacyScrollbarHiddenViews = new Set([]);
+      const legacyScrollbarHiddenViews = new Set(["rerun-ranking"]);
       const syncLegacyScrollbarMode = () => {
         if (typeof document === "undefined" || !document.documentElement) return;
         const root = document.documentElement;

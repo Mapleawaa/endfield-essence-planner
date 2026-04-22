@@ -94,6 +94,8 @@ const createHarness = ({ baseSortedNames, activeNames, searchQuery = "", scoreBy
     selectedNames: createRef([]),
     schemeBaseSelections: createRef({}),
     currentView: createRef("home"),
+    selectedRegions: createRef([]),
+    regionOptions: createRef([]),
     weaponGridTopSpacer: createRef(0),
     weaponGridBottomSpacer: createRef(0),
     baseSortedWeapons: baseSortedNames.map((name) => weaponMap.get(name)).filter(Boolean),
@@ -118,7 +120,11 @@ const createHarness = ({ baseSortedNames, activeNames, searchQuery = "", scoreBy
     ref: createRef,
     watch: (_source, callback, options) => {
       if (options && options.immediate && typeof callback === "function") {
-        callback();
+        if (Array.isArray(_source)) {
+          callback(_source.map((s) => (typeof s === "function" ? s() : s)));
+        } else {
+          callback(typeof _source === "function" ? _source() : _source);
+        }
       }
     },
     onMounted: () => {},

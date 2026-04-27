@@ -92,8 +92,13 @@ assert.match(
 );
 assert.match(
   rerunTemplateSource,
-  /t\("up_badge_text"\)/,
-  "rerun-ranking active tag should use shared UP text"
+  /class="rerun-timeline-status-card"/,
+  "rerun-ranking status badge should render the timeline status card"
+);
+assert.match(
+  rerunTemplateSource,
+  /ch\.statusBadge\.text/,
+  "rerun-ranking status badge should render derived localized status text"
 );
 
 assert.match(styleSource, /\.rerun-ranking-view\b/, "layout css should include rerun-ranking view container styles");
@@ -119,6 +124,9 @@ const requiredI18nKeys = [
   "rerun.timeline_status_active",
   "rerun.timeline_status_upcoming",
   "rerun.timeline_duration_days",
+  "rerun.timeline_badge_active",
+  "rerun.timeline_badge_upcoming",
+  "rerun.timeline_badge_out",
 ];
 
 localeSources.forEach(({ file, source }) => {

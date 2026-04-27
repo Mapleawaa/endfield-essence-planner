@@ -201,12 +201,7 @@
     var pxPerDay = (options && typeof options.pxPerDay === "number" && options.pxPerDay > 0) ? options.pxPerDay : 5;
     var locale = options && options.locale ? String(options.locale) : undefined;
     var t = options && typeof options.t === "function" ? options.t : function (key, params) {
-      var fallbackMap = {
-        "rerun.timeline_status_active": "正在进行",
-        "rerun.timeline_status_past": "已结束",
-        "rerun.timeline_status_upcoming": "即将到来",
-      };
-      var text = fallbackMap[key] || key;
+      var text = String(key || "");
       if (!params || typeof params !== "object") return text;
       return String(text).replace(/\{(\w+)\}/g, function (match, name) {
         return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match;

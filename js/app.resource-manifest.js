@@ -67,6 +67,7 @@
         "./js/templates.plan-config.js",
         "./js/templates.equip-refining.js",
         "./js/templates.strategy-guide-detail.js",
+        "./js/templates.rerun-ranking-view.js",
         "./js/templates.main.01.js",
         "./js/templates.main.02.js",
         "./js/templates.main.03.js",

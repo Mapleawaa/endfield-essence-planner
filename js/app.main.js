@@ -336,6 +336,10 @@
     typeof appTemplates.strategyGuideDetail === "string" && appTemplates.strategyGuideDetail.trim()
       ? appTemplates.strategyGuideDetail.trim()
       : "<div></div>";
+  const rerunRankingViewTemplate =
+    typeof appTemplates.rerunRankingView === "string" && appTemplates.rerunRankingView.trim()
+      ? appTemplates.rerunRankingView.trim()
+      : "<div></div>";
 
   const formatMarkdownBlocks = (() => {
     if (
@@ -630,6 +634,29 @@
       resolvePotentialDescription: { type: Function, required: true },
     },
     template: strategyGuideDetailTemplate,
+  };
+
+  const rerunRankingView = {
+    props: {
+      t: { type: Function, required: true },
+      tTerm: { type: Function, required: true },
+      hasRerunRankingRows: { type: Boolean, required: true },
+      rerunTimelineData: { type: Object, default: null },
+      rerunTimelineZoom: { type: Number, required: true },
+      rerunTimelineShowPreviewAxis: { type: Boolean, required: true },
+      rerunTimelineFullOverview: { type: Boolean, required: true },
+      rerunTimelinePreviewPx: { type: Number, default: null },
+      rerunTimelinePreviewDate: { type: String, default: "" },
+      rerunTimelineRowsHeight: { type: Number, required: true },
+      rerunTimelineTooltip: { type: Object, default: null },
+      rerunTimelineSetZoom: { type: Function, required: true },
+      rerunTimelineToggleFullOverview: { type: Function, required: true },
+      rerunTimelineTogglePreviewAxis: { type: Function, required: true },
+      rerunTimelineOnTimelineMove: { type: Function, required: true },
+      rerunTimelineOnTimelineLeave: { type: Function, required: true },
+      handleCharacterImageError: { type: Function, required: true },
+    },
+    template: rerunRankingViewTemplate,
   };
 
   const app = createApp({
@@ -1774,6 +1801,20 @@ return { view: "planner" };
         rerunRankingRows: state.rerunRankingRows,
         hasRerunRankingRows: state.hasRerunRankingRows,
         rerunRankingGeneratedAt: state.rerunRankingGeneratedAt,
+        rerunTimelineData: state.rerunTimelineData,
+        rerunTimelineZoom: state.rerunTimelineZoom,
+        rerunTimelineShowPreviewAxis: state.rerunTimelineShowPreviewAxis,
+        rerunTimelineFullOverview: state.rerunTimelineFullOverview,
+        rerunTimelinePreviewPx: state.rerunTimelinePreviewPx,
+        rerunTimelinePreviewDate: state.rerunTimelinePreviewDate,
+        rerunTimelineRowsHeight: state.rerunTimelineRowsHeight,
+        rerunTimelineSetZoom: state.rerunTimelineSetZoom,
+        rerunTimelineToggleFullOverview: state.rerunTimelineToggleFullOverview,
+        rerunTimelineTogglePreviewAxis: state.rerunTimelineTogglePreviewAxis,
+        rerunTimelineOnTimelineMove: state.rerunTimelineOnTimelineMove,
+        rerunTimelineOnTimelineLeave: state.rerunTimelineOnTimelineLeave,
+        rerunTimelineTooltip: state.rerunTimelineTooltip,
+        refreshRerunRanking: state.refreshRerunRanking,
         toggleFilterValue: state.toggleFilterValue,
         toggleDropdown: state.toggleDropdown,
         closeAllDropdowns: state.closeAllDropdowns,
@@ -2486,6 +2527,7 @@ return { view: "planner" };
   app.component("EquipRefiningDetail", equipRefiningDetail);
   app.component("EquipRefiningRecommendation", equipRefiningRecommendation);
   app.component("StrategyGuideDetail", strategyGuideDetail);
+  app.component("RerunRankingView", rerunRankingView);
   app.directive("lazy-src", lazyImageDirective);
   app.mount("#app");
 })();

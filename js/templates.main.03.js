@@ -2,84 +2,26 @@
   window.__APP_TEMPLATE_MAIN_PARTS = window.__APP_TEMPLATE_MAIN_PARTS || [];
   window.__APP_TEMPLATE_MAIN_PARTS.push(`
           <div v-else-if="currentView === 'rerun-ranking'" key="rerun-ranking" class="view-shell rerun-ranking-view">
-            <section class="panel rerun-ranking-panel">
-              <div class="panel-title">
-                <h2>{{ t("nav.rerun_ranking") }}</h2>
-              </div>
-              <div v-if="!hasRerunRankingRows" class="rerun-ranking-empty">
-                {{ t("rerun.no_rerun_ranking_data") }}
-              </div>
-              <div v-else class="rerun-ranking-list">
-                <article
-                  v-for="row in rerunRankingRows"
-                  :key="row.characterName"
-                  class="rerun-ranking-card"
-                >
-                  <div class="rerun-ranking-avatar-shell">
-                    <img
-                      v-if="row.avatarSrc"
-                      class="rerun-ranking-avatar"
-                      v-lazy-src="row.avatarSrc"
-                      :alt="tTerm('character', row.characterName)"
-                      loading="lazy"
-                      decoding="async"
-                      @error="handleCharacterImageError"
-                    />
-                    <div v-else class="rerun-ranking-avatar-fallback">
-                      {{ tTerm("character", row.characterName).slice(0, 1) }}
-                    </div>
-                  </div>
-                  <div class="rerun-ranking-main">
-                    <div class="rerun-ranking-name">{{ tTerm("character", row.characterName) }}</div>
-                    <div class="rerun-ranking-meta">
-                      {{ t("badge.gap_days_days", { days: row.hasEndedHistory ? row.gapDays : "-" }) }}
-                    </div>
-                    <div v-if="row.hasEndedHistory" class="rerun-ranking-gap-bar">
-                      <span
-                        class="rerun-ranking-gap-bar-fill"
-                        :style="{ width: (row.gapRatio * 100) + '%' }"
-                      ></span>
-                    </div>
-                    <div class="rerun-ranking-meta">
-                      {{ t("badge.count_count", { count: row.rerunCount > 0 ? row.rerunCount : "-" }) }}
-                    </div>
-                    <div class="rerun-ranking-meta">
-                      {{
-                        t("badge.last_date", {
-                          date: row.hasEndedHistory
-                            ? new Date(row.lastEndMs).toLocaleDateString(locale || undefined)
-                            : "-",
-                        })
-                      }}
-                    </div>
-                    <div class="rerun-ranking-meta" v-if="row.isUpcoming && row.nextStartMs">
-                      {{
-                        t("rerun.expected_start_date", {
-                          date: new Date(row.nextStartMs).toLocaleDateString(locale || undefined),
-                        })
-                      }}
-                    </div>
-                  </div>
-                  <span v-if="row.isActive" class="weapon-up-chip rerun-ranking-up-chip">
-                    <img
-                      class="weapon-up-chip-icon"
-                      src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAAA8CAMAAACQA+KNAAAAw1BMVEX/8gD/8gD/8QD/8QD/8QH/8QH/8QH/8QH/8gL/8gP/8gP/9ib/8QH/8AH/8QH/8gz/8wL/8QD/8QX/8QD/9Av/8QFBQCTh1gX/8QD/8gH/7wH/8wb/8gF1bxv/9AH/8gCOiBWqoRD/8Ab/8AD/8wD/7wP/8AD/7gT/8QD/7Q1aVyBCQCSpohHFvAv/8gH/7wI1NCb/8wJnYx3/6glOSyK3rg6CfBjw4wL/8wL/8wCclRPUyQn/8wD/7wGpohD/7wApKSmAwyqyAAAAQHRSTlPl2M7FlIt4ZVtINQSBnm4OPuEhsRio/Oi7p1IrUfYYsfLvI+ErP7srug75/O7rnW/9UvcY++3054GB8epuUe5v8HZtSQAAApxJREFUWMPFmdlygkAQRcm+xywo2VBQowaEGIyaxCz8/1cFmIE7oVJFU0PZ/WQmL8ee7nt7WuOkZV7dH18cPRwenO+f7u2etXs3O9tbl8Ym4+Spm0HcSYjwlglinEC85Jm47Y02D9Eyc4hPAcGUieHxY3EdZ+3rFGJgbCIAYfbHeU28p5nggGjNr+75M9FFi/LVhJm36LOAuB4xXEe3PxSZAARHi6YQX0pNMECoiim6gycTQqx+ZCYmDDWR6oTaoiw1IRQT3cGTCdQEZ3eoYhVWdYfVyWKBk6U4yT53lPAi16rhHYCo9g4rzsLFiS1Oss9xKWyrTotCJ3oTfQiEv6ZlQigmRazoEIjZmuaixXW8NQeB8Fck70isXM3EqFmI+IOumNAJfQg7SGJhSwiPBAHFxDyhBeGIf3zLqqBaOca7dnMQxqv40yJMVn2IlTCwxiAiQBAUE9cRojD1IXxAUFy0nIlBExBOjZpovjCjaRIfXp3uIExWWjrhElsUELI7Bg0qJnXaxoM4bBrCt2jj3ZC8GgCEg5NI+cK1GdTxrjCwsMLKC2XGgZCk1/8gZs6qxgtMQlDGuw76Tk1NpED4Xhr2MqjxIMZ1VLooSqCY7xx4JXRCY1NDehAvZKblZbuxCEsHojUvzxMVEKtZPj8ugmAKRdKCEJmgGRjyX45AD8LsYzVAqAk4tBpLQw8CVk59lVt+jEB/amcCYgUXpVPYK32IcX4d7+SdlatgeJADQGzmLRosvU4SkfNHkaZZrOvXRGl7x7HRfSoU81Ma2IRtU3PHvdseKooZsixJpIuq3sG0LlLFiiETECvWndUcPzW8Me4xpYtKA+sxQaA7uDIBF+XcY2KykgbGvsfk+6nhr4FNGLsDss32C/ED45b/F5MPF3B+XRSlAAAAAElFTkSuQmCC"
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      @load="$event.target.closest('.weapon-up-chip')?.classList.remove('is-fallback')"
-                      @error="$event.target.style.display = 'none'; $event.target.closest('.weapon-up-chip')?.classList.add('is-fallback')"
-                    />
-                    <span class="weapon-up-chip-fallback">{{ t("up_badge_text") }}</span>
-                  </span>
-                  <span v-else-if="row.isUpcoming" class="weapon-up-chip rerun-ranking-up-chip rerun-ranking-upcoming-chip is-fallback">
-                    <span class="weapon-up-chip-fallback">{{ t("rerun.upcoming_badge") }}</span>
-                  </span>
-                </article>
-              </div>
-            </section>
+            <rerun-ranking-view
+              :t="t"
+              :t-term="tTerm"
+              :has-rerun-ranking-rows="hasRerunRankingRows"
+              :rerun-timeline-data="rerunTimelineData"
+              :rerun-timeline-zoom="rerunTimelineZoom"
+              :rerun-timeline-show-preview-axis="rerunTimelineShowPreviewAxis"
+              :rerun-timeline-full-overview="rerunTimelineFullOverview"
+              :rerun-timeline-preview-px="rerunTimelinePreviewPx"
+              :rerun-timeline-preview-date="rerunTimelinePreviewDate"
+              :rerun-timeline-rows-height="rerunTimelineRowsHeight"
+              :rerun-timeline-tooltip="rerunTimelineTooltip"
+              :rerun-timeline-set-zoom="rerunTimelineSetZoom"
+              :rerun-timeline-toggle-full-overview="rerunTimelineToggleFullOverview"
+              :rerun-timeline-toggle-preview-axis="rerunTimelineTogglePreviewAxis"
+              :rerun-timeline-on-timeline-move="rerunTimelineOnTimelineMove"
+              :rerun-timeline-on-timeline-leave="rerunTimelineOnTimelineLeave"
+              :handle-character-image-error="handleCharacterImageError"
+            ></rerun-ranking-view>
           </div>
-
           <div v-else-if="currentView === 'match'" key="match" class="view-shell match-view">
             <div class="mobile-tabs">
               <button

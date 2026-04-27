@@ -193,21 +193,283 @@
 
   modules.deriveRerunRankingRows = deriveRerunRankingRows;
 
+  // ---- Timeline (Gantt) data ----
+
+  var deriveRerunTimelineData = function (scheduleByCharacter, options) {
+    var source = scheduleByCharacter && typeof scheduleByCharacter === "object" ? scheduleByCharacter : {};
+    var nowMs = resolveNowMs(options && options.nowMs);
+    var pxPerDay = (options && typeof options.pxPerDay === "number" && options.pxPerDay > 0) ? options.pxPerDay : 5;
+    var locale = options && options.locale ? String(options.locale) : undefined;
+    var t = options && typeof options.t === "function" ? options.t : function (key, params) {
+      var text = String(key || "");
+      if (!params || typeof params !== "object") return text;
+      return String(text).replace(/\{(\w+)\}/g, function (match, name) {
+        return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match;
+      });
+    };
+    var tTerm = options && typeof options.tTerm === "function" ? options.tTerm : function (_category, value) {
+      return String(value || "");
+    };
+    var formatMonthLabel = function (date) {
+      try {
+        return new Intl.DateTimeFormat(locale, { year: "numeric", month: "short" }).format(date);
+      } catch (error) {
+        return date.getFullYear() + "/" + (date.getMonth() + 1);
+      }
+    };
+    var formatFullDate = function (ms) {
+      var d = new Date(ms);
+      try {
+        return new Intl.DateTimeFormat(locale, {
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+        }).format(d);
+      } catch (error) {
+        return d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate();
+      }
+    };
+    var formatShortDate = function (ms) {
+      var d = new Date(ms);
+      try {
+        return new Intl.DateTimeFormat(locale, { month: "numeric", day: "numeric" }).format(d);
+      } catch (error) {
+        return (d.getMonth() + 1) + "/" + d.getDate();
+      }
+    };
+
+    var characters = [];
+    var gMin = Infinity;
+    var gMax = -Infinity;
+
+    Object.keys(source).forEach(function (name) {
+      var record = source[name];
+      if (!record || typeof record !== "object") return;
+      var characterName = toCharacterName(record);
+      if (!characterName) return;
+      if (!Array.isArray(record.windows) || !record.windows.length) return;
+
+      var wins = [];
+      record.windows.forEach(function (w) {
+        var s = Number(w && w.startMs);
+        var e = Number(w && w.endMs);
+        if (!Number.isFinite(s) || !Number.isFinite(e)) return;
+        wins.push({ startMs: s, endMs: e, version: String(w.version || "") });
+        if (s < gMin) gMin = s;
+        if (e > gMax) gMax = e;
+      });
+      if (!wins.length) return;
+      wins.sort(function (a, b) { return a.startMs - b.startMs; });
+
+      characters.push({
+        name: characterName,
+        avatarSrc: String(record.avatarSrc || ""),
+        wins: wins
+      });
+    });
+
+    if (!characters.length) return null;
+
+    // Sort by first window start
+    characters.sort(function (a, b) { return a.wins[0].startMs - b.wins[0].startMs; });
+
+    // Timeline range: 1st of first window's month -> 1st of 2 months after last window
+    var rStart = new Date(gMin); rStart.setDate(1); rStart.setHours(0, 0, 0, 0);
+    var rEnd = new Date(gMax); rEnd.setMonth(rEnd.getMonth() + 2); rEnd.setDate(1); rEnd.setHours(0, 0, 0, 0);
+    var rStartMs = rStart.getTime();
+    var rEndMs = rEnd.getTime();
+    var totalDays = Math.ceil((rEndMs - rStartMs) / DAY_MS);
+
+    // Month columns
+    var months = [];
+    var cur = new Date(rStart);
+    while (cur < rEnd) {
+      var nxt = new Date(cur); nxt.setMonth(nxt.getMonth() + 1);
+      var mEnd = Math.min(nxt.getTime(), rEndMs);
+      var days = Math.ceil((mEnd - cur.getTime()) / DAY_MS);
+      months.push({
+        label: formatMonthLabel(cur),
+        wPx: Math.round(days * pxPerDay)
+      });
+      cur.setMonth(cur.getMonth() + 1);
+    }
+
+    var canvasW = Math.round(totalDays * pxPerDay);
+    var showToday = nowMs >= rStartMs && nowMs <= rEndMs;
+    var todayPx = showToday ? ((nowMs - rStartMs) / DAY_MS) * pxPerDay : null;
+
+    // Build character rows with positioned window bars
+    var charRows = characters.map(function (ch) {
+      var hasActive = false;
+      var activeEndMs = null;
+      var nextUpStartMs = null;
+      var charLabel = tTerm("character", ch.name);
+      var bars = ch.wins.map(function (w) {
+        var leftPx = ((w.startMs - rStartMs) / DAY_MS) * pxPerDay;
+        var widthPx = Math.max(((w.endMs - w.startMs) / DAY_MS) * pxPerDay, 4);
+        var isActive = nowMs >= w.startMs && nowMs <= w.endMs;
+        var isPast = nowMs > w.endMs;
+        var isUpcoming = nowMs < w.startMs;
+        if (isActive) { hasActive = true; activeEndMs = w.endMs; }
+        if (isUpcoming && (nextUpStartMs === null || w.startMs < nextUpStartMs)) {
+          nextUpStartMs = w.startMs;
+        }
+        var cls = isActive ? "active" : (isPast ? "past" : "upcoming");
+        var statusText = isActive
+          ? t("rerun.timeline_status_active")
+          : (isPast ? t("rerun.timeline_status_past") : t("rerun.timeline_status_upcoming"));
+        var fullLabel = formatFullDate(w.startMs) + " – " + formatFullDate(w.endMs);
+        var shortLabel = formatShortDate(w.startMs) + "–" + formatShortDate(w.endMs);
+        var durationDays = Math.ceil((w.endMs - w.startMs) / DAY_MS);
+        var versionLabel = w.version || "";
+        // Always use short label (no year) for consistency. Tiny bars (< 40px): empty.
+        var showLabel = widthPx >= 40 ? shortLabel : "";
+        return {
+          leftPx: leftPx,
+          widthPx: widthPx,
+          cls: cls,
+          dateLabel: showLabel,
+          fullLabel: fullLabel,
+          charName: ch.name,
+          charLabel: charLabel,
+          statusText: statusText,
+          durationDays: durationDays,
+          versionLabel: versionLabel,
+          startMs: w.startMs,
+          endMs: w.endMs
+        };
+      });
+
+      // Status badge: countdown for active/upcoming, "OUT!" for past-only
+      var statusBadge = null;
+      if (hasActive && activeEndMs !== null) {
+        var remainingDays = Math.max(1, Math.ceil((activeEndMs - nowMs) / DAY_MS));
+        statusBadge = {
+          type: "active",
+          days: remainingDays,
+          text: t("rerun.timeline_badge_active", { days: remainingDays })
+        };
+      } else if (nextUpStartMs !== null) {
+        var untilDays = Math.max(1, Math.ceil((nextUpStartMs - nowMs) / DAY_MS));
+        statusBadge = {
+          type: "upcoming",
+          days: untilDays,
+          text: t("rerun.timeline_badge_upcoming", { days: untilDays })
+        };
+      } else if (bars.length > 0) {
+        statusBadge = { type: "out", text: t("rerun.timeline_badge_out") };
+      }
+
+      return { name: ch.name, avatarSrc: ch.avatarSrc, bars: bars, hasActive: hasActive, statusBadge: statusBadge };
+    });
+
+    return {
+      charRows: charRows,
+      months: months,
+      canvasW: canvasW,
+      rStartMs: rStartMs,
+      rEndMs: rEndMs,
+      totalDays: totalDays,
+      pxPerDay: pxPerDay,
+      todayPx: todayPx,
+      showToday: showToday,
+      nowMs: nowMs
+    };
+  };
+  modules.deriveRerunTimelineData = deriveRerunTimelineData;
+
   modules.initRerunRanking = function initRerunRanking(ctx, state, options) {
-    const { ref, watch } = ctx;
-    const resolveValue = (value, fallback) =>
-      value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "value")
+    var ref = ctx.ref, watch = ctx.watch, computed = ctx.computed, nextTick = ctx.nextTick;
+    if (typeof computed !== "function") {
+      computed = function (getter) {
+        return {
+          get value() {
+            return typeof getter === "function" ? getter() : undefined;
+          },
+        };
+      };
+    }
+    var resolveValue = function (value, fallback) {
+      return value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "value")
         ? value
         : ref(fallback);
+    };
+    var resolveLocale = function () {
+      return state.locale && typeof state.locale.value !== "undefined" ? state.locale.value : undefined;
+    };
+    var resolveTimelineRightWidth = function () {
+      if (typeof document !== "undefined") {
+        var rightPanel = document.querySelector(".rerun-ranking-view .rerun-timeline-right");
+        if (rightPanel && typeof rightPanel.getBoundingClientRect === "function") {
+          var rect = rightPanel.getBoundingClientRect();
+          var width = Number(rect && rect.width) || Number(rightPanel.clientWidth) || 0;
+          if (width > 0) return width;
+        }
+      }
+      if (typeof window !== "undefined" && window.innerWidth) {
+        return Math.max(Number(window.innerWidth) - 220, 240);
+      }
+      return 800;
+    };
+    var measureTimelineRowHeight = function (root) {
+      var row = null;
+      if (root && typeof root.querySelector === "function") {
+        row = root.querySelector(".rerun-timeline-row");
+      }
+      if (!row && typeof document !== "undefined") {
+        row = document.querySelector(".rerun-ranking-view .rerun-timeline-row");
+      }
+      if (!row || typeof row.getBoundingClientRect !== "function") return;
+      var height = Number(row.getBoundingClientRect().height);
+      if (Number.isFinite(height) && height > 0) {
+        state.rerunTimelineRowHeight.value = height;
+      }
+    };
+    var scheduleTimelineLayoutMeasure = function () {
+      var run = function () { measureTimelineRowHeight(); };
+      if (typeof nextTick === "function") {
+        nextTick(run);
+        return;
+      }
+      if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(run);
+      }
+    };
 
     state.rerunRankingRows = resolveValue(state.rerunRankingRows, []);
     state.hasRerunRankingRows = resolveValue(state.hasRerunRankingRows, false);
     state.rerunRankingGeneratedAt = resolveValue(state.rerunRankingGeneratedAt, 0);
 
-    state.refreshRerunRanking = (nextNow) => {
-      // Priority: character map ({ value: byCharacter }) -> normalized byCharacter fallback -> weapon map ({ value: byWeapon }).
-      // The first two sources are character-oriented; the last one is weapon-oriented and may use different item keys.
-      const source = (
+    // Timeline state
+    state.rerunTimelineZoom = resolveValue(state.rerunTimelineZoom, 5);
+    state.rerunTimelineShowPreviewAxis = resolveValue(state.rerunTimelineShowPreviewAxis, true);
+    state.rerunTimelineFullOverview = resolveValue(state.rerunTimelineFullOverview, false);
+    state.rerunTimelineData = resolveValue(state.rerunTimelineData, null);
+    state.rerunTimelineRowHeight = resolveValue(state.rerunTimelineRowHeight, 52);
+    state.rerunTimelineRowsHeight = computed(function () {
+      var data = state.rerunTimelineData.value;
+      var count = data && Array.isArray(data.charRows) ? data.charRows.length : 0;
+      var rowHeight = Number(state.rerunTimelineRowHeight.value);
+      return count * (Number.isFinite(rowHeight) && rowHeight > 0 ? rowHeight : 52);
+    });
+    state.rerunTimelinePreviewPx = ref(null);
+    state.rerunTimelinePreviewDate = ref("");
+
+    var computeTimeline = function (source, nowMs, pxPerDay) {
+      var data = deriveRerunTimelineData(source, {
+        nowMs: nowMs,
+        pxPerDay: pxPerDay,
+        locale: resolveLocale(),
+        t: state.t,
+        tTerm: state.tTerm,
+      });
+      state.rerunTimelineData.value = data;
+      scheduleTimelineLayoutMeasure();
+      return data;
+    };
+
+    state.refreshRerunRanking = function (nextNow) {
+      var source = (
         (state.characterUpByCharacter && state.characterUpByCharacter.value) ||
         (state.upScheduleNormalized &&
           state.upScheduleNormalized.value &&
@@ -215,29 +477,120 @@
         (state.weaponUpByWeapon && state.weaponUpByWeapon.value) ||
         {}
       );
-      const scheduleNowMs =
+      var scheduleNowMs =
         state.upScheduleNowMs && typeof state.upScheduleNowMs.value !== "undefined"
           ? Number(state.upScheduleNowMs.value)
           : Number.NaN;
-      const fallbackNow =
+      var fallbackNow =
         Number.isFinite(scheduleNowMs) && scheduleNowMs > 0
           ? scheduleNowMs
           : options && Object.prototype.hasOwnProperty.call(options, "nowMs")
           ? options.nowMs
           : undefined;
-      const nowMs = resolveNowMs(typeof nextNow === "undefined" ? fallbackNow : nextNow);
-      const activeByWeapon =
+      var nowMs = resolveNowMs(typeof nextNow === "undefined" ? fallbackNow : nextNow);
+      var activeByWeapon =
         typeof state.getWeaponUpWindowAt === "function" ? state.getWeaponUpWindowAt(nowMs) : {};
-      const rows = deriveRerunRankingRows(source, { nowMs, activeByWeapon });
+      var rows = deriveRerunRankingRows(source, { nowMs: nowMs, activeByWeapon: activeByWeapon });
       state.rerunRankingRows.value = rows;
       state.hasRerunRankingRows.value = rows.length > 0;
       state.rerunRankingGeneratedAt.value = nowMs;
+
+      var pxPerDay = Number(state.rerunTimelineZoom.value) || 5;
+      computeTimeline(source, nowMs, pxPerDay);
       return rows;
     };
+
+    // Zoom methods
+    state.rerunTimelineSetZoom = function (value) {
+      var z = Number(value);
+      if (!Number.isFinite(z) || z < 1.5) z = 1.5;
+      if (z > 15) z = 15;
+      state.rerunTimelineZoom.value = z;
+      state.rerunTimelineFullOverview.value = false;
+      state.refreshRerunRanking();
+    };
+
+    state.rerunTimelineToggleFullOverview = function () {
+      var data = state.rerunTimelineData.value;
+      if (!data) return;
+      state.rerunTimelineFullOverview.value = !state.rerunTimelineFullOverview.value;
+      if (state.rerunTimelineFullOverview.value) {
+        var availW = resolveTimelineRightWidth();
+        var fitZoom = availW / data.totalDays;
+        state.rerunTimelineZoom.value = Math.max(1.5, Math.min(15, Math.round(fitZoom * 10) / 10));
+      } else {
+        state.rerunTimelineZoom.value = 5;
+      }
+      state.refreshRerunRanking();
+    };
+
+    state.rerunTimelineTogglePreviewAxis = function () {
+      state.rerunTimelineShowPreviewAxis.value = !state.rerunTimelineShowPreviewAxis.value;
+    };
+
+    // Tooltip state
+    state.rerunTimelineTooltip = ref(null);
+
+    // Preview axis + tooltip: mousemove handler
+    state.rerunTimelineOnTimelineMove = function (event) {
+      // Find the right scrollable panel (exclude left character column)
+      var rightPanel = event.currentTarget.querySelector(".rerun-timeline-right");
+      if (!rightPanel) return;
+      measureTimelineRowHeight(event.currentTarget);
+      var rightRect = rightPanel.getBoundingClientRect();
+      var xInRight = event.clientX - rightRect.left + rightPanel.scrollLeft;
+      var isOverRight = event.clientX >= rightRect.left;
+
+      // Preview axis (only when mouse is over the right panel)
+      if (state.rerunTimelineShowPreviewAxis.value && isOverRight && xInRight >= 0) {
+        state.rerunTimelinePreviewPx.value = xInRight;
+        var data = state.rerunTimelineData.value;
+        if (data) {
+          var dayOffset = xInRight / data.pxPerDay;
+          var ms = data.rStartMs + dayOffset * DAY_MS;
+          state.rerunTimelinePreviewDate.value = new Date(ms).toLocaleDateString(resolveLocale());
+        }
+      } else {
+        state.rerunTimelinePreviewPx.value = null;
+      }
+
+      // Tooltip: check if hovering over a bar
+      var barEl = event.target.closest(".rerun-timeline-bar");
+      if (barEl) {
+        var tip = {
+          charName: barEl.getAttribute("data-char-name") || "",
+          charLabel: barEl.getAttribute("data-char-label") || "",
+          fullLabel: barEl.getAttribute("data-full-label") || "",
+          statusText: barEl.getAttribute("data-status-text") || "",
+          durationDays: barEl.getAttribute("data-duration-days") || "",
+          versionLabel: barEl.getAttribute("data-version-label") || "",
+          x: event.clientX,
+          y: event.clientY
+        };
+        state.rerunTimelineTooltip.value = tip;
+      } else {
+        state.rerunTimelineTooltip.value = null;
+      }
+    };
+
+    state.rerunTimelineOnTimelineLeave = function () {
+      state.rerunTimelinePreviewPx.value = null;
+      state.rerunTimelineTooltip.value = null;
+    };
+
+    if (typeof watch === "function" && state.localeRenderVersion && typeof state.localeRenderVersion === "object") {
+      watch(
+        function () { return Number(state.localeRenderVersion.value || 0); },
+        function () {
+          state.refreshRerunRanking();
+        }
+      );
+    }
+
     if (typeof watch === "function" && state.upScheduleNowMs && typeof state.upScheduleNowMs === "object") {
       watch(
-        () => Number(state.upScheduleNowMs.value || 0),
-        (nextNow) => {
+        function () { return Number(state.upScheduleNowMs.value || 0); },
+        function (nextNow) {
           state.refreshRerunRanking(nextNow);
         },
         { immediate: true }

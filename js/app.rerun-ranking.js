@@ -284,15 +284,8 @@
         var shortLabel = fmtShort(w.startMs) + "–" + fmtShort(w.endMs);
         var durationDays = Math.ceil((w.endMs - w.startMs) / DAY_MS);
         var versionLabel = w.version || "";
-        // Past bars: short label (no year). Active/upcoming: full if wide enough. Tiny bars (< 40px): empty.
-        var showLabel;
-        if (widthPx < 40) {
-          showLabel = "";
-        } else if (isPast) {
-          showLabel = shortLabel;
-        } else {
-          showLabel = widthPx < 90 ? shortLabel : fullLabel;
-        }
+        // Always use short label (no year) for consistency. Tiny bars (< 40px): empty.
+        var showLabel = widthPx >= 40 ? shortLabel : "";
         return {
           leftPx: leftPx,
           widthPx: widthPx,

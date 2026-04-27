@@ -153,6 +153,7 @@
     state.rerunTimelineShowPreviewAxis = ref(true);
     state.rerunTimelineFullOverview = ref(false);
     state.rerunTimelineData = ref(null);
+    state.rerunTimelineRowHeight = ref(52);
 
     // 拥有状态功能提示相关状态
     state.showWeaponOwnershipHint = ref(false);

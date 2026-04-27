@@ -114,6 +114,15 @@
         });
         return;
       }
+      if (typeof windowItem.version !== "undefined" && typeof windowItem.version !== "string") {
+        reportIssue({
+          code: ISSUE_CODES.UNKNOWN_KEY,
+          weaponName,
+          path: `windows[${sourceIndex}].version`,
+          message: "window.version must be string when provided",
+        });
+        return;
+      }
       const startParsed = parseScheduleTime(windowItem.start, "start");
       const endParsed = parseScheduleTime(windowItem.end, "end");
       if (!startParsed || !endParsed) {
@@ -141,6 +150,7 @@
         endIso: endParsed.iso,
         sourceStart: String(windowItem.start || ""),
         sourceEnd: String(windowItem.end || ""),
+        version: typeof windowItem.version === "string" ? windowItem.version : "",
         sourceIndex,
       });
     });
@@ -203,7 +213,8 @@
       const endMs = Number(windowItem && windowItem.endMs);
       const startIso = String((windowItem && windowItem.startIso) || "");
       const endIso = String((windowItem && windowItem.endIso) || "");
-      return `${startMs}|${endMs}|${startIso}|${endIso}`;
+      const version = String((windowItem && windowItem.version) || "");
+      return `${startMs}|${endMs}|${startIso}|${endIso}|${version}`;
     };
     const sortWindowsByTime = (left, right) => {
       const leftStart = Number(left && left.startMs);

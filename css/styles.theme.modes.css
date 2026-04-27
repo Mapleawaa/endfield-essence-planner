@@ -1592,5 +1592,9 @@ html[data-bg-display="off"][data-theme="light"] body::after {
   background: rgba(var(--color-black-rgb), var(--alpha-03));
   border-color: rgba(var(--color-black-rgb), var(--alpha-12));
 }
+[data-theme="light"] .rerun-timeline-status-card--out {
+  background: rgba(var(--color-black-rgb), var(--alpha-06));
+  border-color: rgba(var(--color-black-rgb), var(--alpha-10));
+}
 
 

@@ -4,6 +4,7 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "../..");
 const templateFile = path.join(root, "js/templates.main.03.js");
+const rerunTemplateFile = path.join(root, "js/templates.rerun-ranking-view.js");
 const styleFile = path.join(root, "css/styles.layout.css");
 const localeFiles = [
   path.join(root, "data/i18n/zh-CN.js"),
@@ -13,12 +14,14 @@ const localeFiles = [
 ];
 
 assert.equal(fs.existsSync(templateFile), true, "js/templates.main.03.js should exist");
+assert.equal(fs.existsSync(rerunTemplateFile), true, "js/templates.rerun-ranking-view.js should exist");
 assert.equal(fs.existsSync(styleFile), true, "css/styles.layout.css should exist");
 localeFiles.forEach((file) => {
   assert.equal(fs.existsSync(file), true, `${path.relative(root, file)} should exist`);
 });
 
 const templateSource = fs.readFileSync(templateFile, "utf8");
+const rerunTemplateSource = fs.readFileSync(rerunTemplateFile, "utf8");
 const styleSource = fs.readFileSync(styleFile, "utf8");
 const localeSources = localeFiles.map((file) => ({
   file,
@@ -33,94 +36,96 @@ const rerunViewBlock = rerunViewMatch[0];
 
 assert.match(
   rerunViewBlock,
-  /v-for="row in rerunRankingRows"/,
-  "rerun-ranking view should render rows from rerunRankingRows"
+  /<rerun-ranking-view\b/,
+  "main template should delegate rerun-ranking view to extracted component"
 );
 assert.match(
   rerunViewBlock,
-  /row\.characterName/,
-  "rerun-ranking card should show character name first"
+  /:rerun-timeline-data="rerunTimelineData"/,
+  "rerun-ranking component should receive timeline data"
 );
 assert.match(
   rerunViewBlock,
-  /row\.avatarSrc/,
-  "rerun-ranking card should render character avatar"
+  /:rerun-timeline-rows-height="rerunTimelineRowsHeight"/,
+  "rerun-ranking component should receive dynamic row height"
+);
+
+assert.match(
+  rerunTemplateSource,
+  /v-for="ch in rerunTimelineData\.charRows"/,
+  "rerun-ranking timeline should render character timeline rows"
 );
 assert.match(
-  rerunViewBlock,
-  /row\.gapDays/,
-  "rerun-ranking card should show rerun gap days"
+  rerunTemplateSource,
+  /v-for="bar in ch\.bars"/,
+  "rerun-ranking timeline should render schedule bars"
 );
 assert.match(
-  rerunViewBlock,
-  /row\.rerunCount/,
-  "rerun-ranking card should show rerun count"
+  rerunTemplateSource,
+  /tTerm\("character", ch\.name\)/,
+  "rerun-ranking timeline should localize character labels"
 );
 assert.match(
-  rerunViewBlock,
-  /row\.lastEndMs/,
-  "rerun-ranking card should show last rerun time"
+  rerunTemplateSource,
+  /:data-char-label="bar\.charLabel"/,
+  "rerun-ranking tooltip dataset should include localized character label"
 );
 assert.match(
-  rerunViewBlock,
-  /row\.isActive/,
-  "rerun-ranking card should expose active UP status"
+  rerunTemplateSource,
+  /t\("rerun\.timeline_status_active"\)/,
+  "rerun-ranking legend should use i18n for active status"
 );
 assert.match(
-  rerunViewBlock,
-  /row\.rerunCount\s*>\s*0/,
-  "rerun-ranking card should use rerunCount>0 guard for placeholder rendering"
+  rerunTemplateSource,
+  /t\("rerun\.timeline_duration_days"/,
+  "rerun-ranking tooltip duration should use i18n"
 );
 assert.match(
-  rerunViewBlock,
-  /class=\"weapon-up-chip rerun-ranking-up-chip\"/,
-  "rerun-ranking active tag should reuse weapon UP chip class"
+  rerunTemplateSource,
+  /rerunTimelineRowsHeight \+ 'px'/,
+  "timeline axis height should use measured row height"
 );
 assert.match(
-  rerunViewBlock,
-  /weapon-up-chip-fallback/,
-  "rerun-ranking active tag should keep weapon chip fallback text"
-);
-assert.match(
-  rerunViewBlock,
+  rerunTemplateSource,
   /v-if="!hasRerunRankingRows"/,
   "rerun-ranking view should provide explicit empty state"
 );
-assert.doesNotMatch(
-  rerunViewBlock,
-  /row\.weaponName/,
-  "rerun-ranking view should keep pure character-first cards without weapon-name field"
+assert.match(
+  rerunTemplateSource,
+  /t\("up_badge_text"\)/,
+  "rerun-ranking active tag should use shared UP text"
 );
 
 assert.match(styleSource, /\.rerun-ranking-view\b/, "layout css should include rerun-ranking view container styles");
-assert.match(styleSource, /\.rerun-ranking-list\b/, "layout css should include rerun-ranking list styles");
-assert.match(styleSource, /\.rerun-ranking-card\b/, "layout css should include rerun-ranking card styles");
+assert.match(styleSource, /\.rerun-timeline-body\b/, "layout css should include rerun timeline body styles");
+assert.match(styleSource, /\.rerun-timeline-bar\b/, "layout css should include rerun timeline bar styles");
 assert.match(styleSource, /\.rerun-ranking-empty\b/, "layout css should include rerun-ranking empty state styles");
 assert.match(
   styleSource,
-  /\.rerun-ranking-list\s*\{[\s\S]*grid-template-columns:\s*1fr;/,
-  "rerun-ranking list should stay single-column on all orientations"
+  /--rerun-timeline-row-height:\s*52px;/,
+  "rerun timeline should define desktop row height through CSS variable"
 );
 assert.match(
   styleSource,
-  /\.rerun-ranking-avatar-shell\s*\{[\s\S]*clamp\(/,
-  "rerun-ranking avatar should use adaptive clamp sizing"
+  /--rerun-timeline-row-height:\s*46px;/,
+  "rerun timeline should define mobile row height through CSS variable"
 );
 
 const requiredI18nKeys = [
-  "\"复刻排行\"",
-  "\"间隔：{days} 天\"",
-  "\"次数：{count} 次\"",
-  "\"上次：{date}\"",
-  "\"当前UP\"",
-  "\"暂无复刻排行数据\"",
+  "rerun.timeline_zoom",
+  "rerun.timeline_overview",
+  "rerun.timeline_preview_axis",
+  "rerun.timeline_status_past",
+  "rerun.timeline_status_active",
+  "rerun.timeline_status_upcoming",
+  "rerun.timeline_duration_days",
 ];
 
 localeSources.forEach(({ file, source }) => {
   requiredI18nKeys.forEach((key) => {
     assert.match(
       source,
-      new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+      new RegExp(`"${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`),
       `${path.relative(root, file)} should define i18n key ${key}`
     );
   });

@@ -23,9 +23,21 @@ const run = () => {
 
     entry.windows.forEach((windowEntry) => {
       const windowKeys = Object.keys(windowEntry).sort();
-      assert.deepEqual(windowKeys, ["end", "start"], "window only allows `start` and `end`");
+      assert.deepEqual(
+        windowKeys.filter((key) => key !== "version"),
+        ["end", "start"],
+        "window only requires `start` and `end`"
+      );
+      assert.equal(
+        windowKeys.every((key) => ["end", "start", "version"].includes(key)),
+        true,
+        "window only allows `start`, `end`, and optional `version`"
+      );
       assert.equal(typeof windowEntry.start, "string", "window.start must be string");
       assert.equal(typeof windowEntry.end, "string", "window.end must be string");
+      if (Object.prototype.hasOwnProperty.call(windowEntry, "version")) {
+        assert.equal(typeof windowEntry.version, "string", "window.version must be string when present");
+      }
     });
   }
 };

@@ -199,6 +199,49 @@
     var source = scheduleByCharacter && typeof scheduleByCharacter === "object" ? scheduleByCharacter : {};
     var nowMs = resolveNowMs(options && options.nowMs);
     var pxPerDay = (options && typeof options.pxPerDay === "number" && options.pxPerDay > 0) ? options.pxPerDay : 5;
+    var locale = options && options.locale ? String(options.locale) : undefined;
+    var t = options && typeof options.t === "function" ? options.t : function (key, params) {
+      var fallbackMap = {
+        "rerun.timeline_status_active": "正在进行",
+        "rerun.timeline_status_past": "已结束",
+        "rerun.timeline_status_upcoming": "即将到来",
+      };
+      var text = fallbackMap[key] || key;
+      if (!params || typeof params !== "object") return text;
+      return String(text).replace(/\{(\w+)\}/g, function (match, name) {
+        return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match;
+      });
+    };
+    var tTerm = options && typeof options.tTerm === "function" ? options.tTerm : function (_category, value) {
+      return String(value || "");
+    };
+    var formatMonthLabel = function (date) {
+      try {
+        return new Intl.DateTimeFormat(locale, { year: "numeric", month: "short" }).format(date);
+      } catch (error) {
+        return date.getFullYear() + "/" + (date.getMonth() + 1);
+      }
+    };
+    var formatFullDate = function (ms) {
+      var d = new Date(ms);
+      try {
+        return new Intl.DateTimeFormat(locale, {
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+        }).format(d);
+      } catch (error) {
+        return d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate();
+      }
+    };
+    var formatShortDate = function (ms) {
+      var d = new Date(ms);
+      try {
+        return new Intl.DateTimeFormat(locale, { month: "numeric", day: "numeric" }).format(d);
+      } catch (error) {
+        return (d.getMonth() + 1) + "/" + d.getDate();
+      }
+    };
 
     var characters = [];
     var gMin = Infinity;
@@ -250,7 +293,7 @@
       var mEnd = Math.min(nxt.getTime(), rEndMs);
       var days = Math.ceil((mEnd - cur.getTime()) / DAY_MS);
       months.push({
-        label: cur.getFullYear() + "年" + (cur.getMonth() + 1) + "月",
+        label: formatMonthLabel(cur),
         wPx: Math.round(days * pxPerDay)
       });
       cur.setMonth(cur.getMonth() + 1);
@@ -261,27 +304,27 @@
     var todayPx = showToday ? ((nowMs - rStartMs) / DAY_MS) * pxPerDay : null;
 
     // Build character rows with positioned window bars
-    var fmtFull = function (ms) {
-      var d = new Date(ms);
-      return d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate();
-    };
-    var fmtShort = function (ms) {
-      var d = new Date(ms);
-      return (d.getMonth() + 1) + "/" + d.getDate();
-    };
     var charRows = characters.map(function (ch) {
       var hasActive = false;
+      var activeEndMs = null;
+      var nextUpStartMs = null;
+      var charLabel = tTerm("character", ch.name);
       var bars = ch.wins.map(function (w) {
         var leftPx = ((w.startMs - rStartMs) / DAY_MS) * pxPerDay;
         var widthPx = Math.max(((w.endMs - w.startMs) / DAY_MS) * pxPerDay, 4);
         var isActive = nowMs >= w.startMs && nowMs <= w.endMs;
         var isPast = nowMs > w.endMs;
         var isUpcoming = nowMs < w.startMs;
-        if (isActive) hasActive = true;
+        if (isActive) { hasActive = true; activeEndMs = w.endMs; }
+        if (isUpcoming && (nextUpStartMs === null || w.startMs < nextUpStartMs)) {
+          nextUpStartMs = w.startMs;
+        }
         var cls = isActive ? "active" : (isPast ? "past" : "upcoming");
-        var statusText = isActive ? "正在进行" : (isPast ? "已结束" : "即将到来");
-        var fullLabel = fmtFull(w.startMs) + " – " + fmtFull(w.endMs);
-        var shortLabel = fmtShort(w.startMs) + "–" + fmtShort(w.endMs);
+        var statusText = isActive
+          ? t("rerun.timeline_status_active")
+          : (isPast ? t("rerun.timeline_status_past") : t("rerun.timeline_status_upcoming"));
+        var fullLabel = formatFullDate(w.startMs) + " – " + formatFullDate(w.endMs);
+        var shortLabel = formatShortDate(w.startMs) + "–" + formatShortDate(w.endMs);
         var durationDays = Math.ceil((w.endMs - w.startMs) / DAY_MS);
         var versionLabel = w.version || "";
         // Always use short label (no year) for consistency. Tiny bars (< 40px): empty.
@@ -293,6 +336,7 @@
           dateLabel: showLabel,
           fullLabel: fullLabel,
           charName: ch.name,
+          charLabel: charLabel,
           statusText: statusText,
           durationDays: durationDays,
           versionLabel: versionLabel,
@@ -300,7 +344,28 @@
           endMs: w.endMs
         };
       });
-      return { name: ch.name, avatarSrc: ch.avatarSrc, bars: bars, hasActive: hasActive };
+
+      // Status badge: countdown for active/upcoming, "OUT!" for past-only
+      var statusBadge = null;
+      if (hasActive && activeEndMs !== null) {
+        var remainingDays = Math.max(1, Math.ceil((activeEndMs - nowMs) / DAY_MS));
+        statusBadge = {
+          type: "active",
+          days: remainingDays,
+          text: t("rerun.timeline_badge_active", { days: remainingDays })
+        };
+      } else if (nextUpStartMs !== null) {
+        var untilDays = Math.max(1, Math.ceil((nextUpStartMs - nowMs) / DAY_MS));
+        statusBadge = {
+          type: "upcoming",
+          days: untilDays,
+          text: t("rerun.timeline_badge_upcoming", { days: untilDays })
+        };
+      } else if (bars.length > 0) {
+        statusBadge = { type: "out", text: t("rerun.timeline_badge_out") };
+      }
+
+      return { name: ch.name, avatarSrc: ch.avatarSrc, bars: bars, hasActive: hasActive, statusBadge: statusBadge };
     });
 
     return {
@@ -319,11 +384,61 @@
   modules.deriveRerunTimelineData = deriveRerunTimelineData;
 
   modules.initRerunRanking = function initRerunRanking(ctx, state, options) {
-    var ref = ctx.ref, watch = ctx.watch, computed = ctx.computed;
+    var ref = ctx.ref, watch = ctx.watch, computed = ctx.computed, nextTick = ctx.nextTick;
+    if (typeof computed !== "function") {
+      computed = function (getter) {
+        return {
+          get value() {
+            return typeof getter === "function" ? getter() : undefined;
+          },
+        };
+      };
+    }
     var resolveValue = function (value, fallback) {
       return value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "value")
         ? value
         : ref(fallback);
+    };
+    var resolveLocale = function () {
+      return state.locale && typeof state.locale.value !== "undefined" ? state.locale.value : undefined;
+    };
+    var resolveTimelineRightWidth = function () {
+      if (typeof document !== "undefined") {
+        var rightPanel = document.querySelector(".rerun-ranking-view .rerun-timeline-right");
+        if (rightPanel && typeof rightPanel.getBoundingClientRect === "function") {
+          var rect = rightPanel.getBoundingClientRect();
+          var width = Number(rect && rect.width) || Number(rightPanel.clientWidth) || 0;
+          if (width > 0) return width;
+        }
+      }
+      if (typeof window !== "undefined" && window.innerWidth) {
+        return Math.max(Number(window.innerWidth) - 220, 240);
+      }
+      return 800;
+    };
+    var measureTimelineRowHeight = function (root) {
+      var row = null;
+      if (root && typeof root.querySelector === "function") {
+        row = root.querySelector(".rerun-timeline-row");
+      }
+      if (!row && typeof document !== "undefined") {
+        row = document.querySelector(".rerun-ranking-view .rerun-timeline-row");
+      }
+      if (!row || typeof row.getBoundingClientRect !== "function") return;
+      var height = Number(row.getBoundingClientRect().height);
+      if (Number.isFinite(height) && height > 0) {
+        state.rerunTimelineRowHeight.value = height;
+      }
+    };
+    var scheduleTimelineLayoutMeasure = function () {
+      var run = function () { measureTimelineRowHeight(); };
+      if (typeof nextTick === "function") {
+        nextTick(run);
+        return;
+      }
+      if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(run);
+      }
     };
 
     state.rerunRankingRows = resolveValue(state.rerunRankingRows, []);
@@ -335,12 +450,26 @@
     state.rerunTimelineShowPreviewAxis = resolveValue(state.rerunTimelineShowPreviewAxis, true);
     state.rerunTimelineFullOverview = resolveValue(state.rerunTimelineFullOverview, false);
     state.rerunTimelineData = resolveValue(state.rerunTimelineData, null);
+    state.rerunTimelineRowHeight = resolveValue(state.rerunTimelineRowHeight, 52);
+    state.rerunTimelineRowsHeight = computed(function () {
+      var data = state.rerunTimelineData.value;
+      var count = data && Array.isArray(data.charRows) ? data.charRows.length : 0;
+      var rowHeight = Number(state.rerunTimelineRowHeight.value);
+      return count * (Number.isFinite(rowHeight) && rowHeight > 0 ? rowHeight : 52);
+    });
     state.rerunTimelinePreviewPx = ref(null);
     state.rerunTimelinePreviewDate = ref("");
 
     var computeTimeline = function (source, nowMs, pxPerDay) {
-      var data = deriveRerunTimelineData(source, { nowMs: nowMs, pxPerDay: pxPerDay });
+      var data = deriveRerunTimelineData(source, {
+        nowMs: nowMs,
+        pxPerDay: pxPerDay,
+        locale: resolveLocale(),
+        t: state.t,
+        tTerm: state.tTerm,
+      });
       state.rerunTimelineData.value = data;
+      scheduleTimelineLayoutMeasure();
       return data;
     };
 
@@ -371,7 +500,6 @@
       state.hasRerunRankingRows.value = rows.length > 0;
       state.rerunRankingGeneratedAt.value = nowMs;
 
-      // Compute timeline data
       var pxPerDay = Number(state.rerunTimelineZoom.value) || 5;
       computeTimeline(source, nowMs, pxPerDay);
       return rows;
@@ -392,8 +520,7 @@
       if (!data) return;
       state.rerunTimelineFullOverview.value = !state.rerunTimelineFullOverview.value;
       if (state.rerunTimelineFullOverview.value) {
-        // Compute zoom that fits all data in viewport (estimate ~800px available for desktop)
-        var availW = typeof window !== "undefined" && window.innerWidth ? Math.max(window.innerWidth - 220, 400) : 800;
+        var availW = resolveTimelineRightWidth();
         var fitZoom = availW / data.totalDays;
         state.rerunTimelineZoom.value = Math.max(1.5, Math.min(15, Math.round(fitZoom * 10) / 10));
       } else {
@@ -414,6 +541,7 @@
       // Find the right scrollable panel (exclude left character column)
       var rightPanel = event.currentTarget.querySelector(".rerun-timeline-right");
       if (!rightPanel) return;
+      measureTimelineRowHeight(event.currentTarget);
       var rightRect = rightPanel.getBoundingClientRect();
       var xInRight = event.clientX - rightRect.left + rightPanel.scrollLeft;
       var isOverRight = event.clientX >= rightRect.left;
@@ -425,9 +553,7 @@
         if (data) {
           var dayOffset = xInRight / data.pxPerDay;
           var ms = data.rStartMs + dayOffset * DAY_MS;
-          state.rerunTimelinePreviewDate.value = new Date(ms).toLocaleDateString(
-            (typeof window !== "undefined" && window.locale) || undefined
-          );
+          state.rerunTimelinePreviewDate.value = new Date(ms).toLocaleDateString(resolveLocale());
         }
       } else {
         state.rerunTimelinePreviewPx.value = null;
@@ -438,6 +564,7 @@
       if (barEl) {
         var tip = {
           charName: barEl.getAttribute("data-char-name") || "",
+          charLabel: barEl.getAttribute("data-char-label") || "",
           fullLabel: barEl.getAttribute("data-full-label") || "",
           statusText: barEl.getAttribute("data-status-text") || "",
           durationDays: barEl.getAttribute("data-duration-days") || "",
@@ -455,6 +582,15 @@
       state.rerunTimelinePreviewPx.value = null;
       state.rerunTimelineTooltip.value = null;
     };
+
+    if (typeof watch === "function" && state.localeRenderVersion && typeof state.localeRenderVersion === "object") {
+      watch(
+        function () { return Number(state.localeRenderVersion.value || 0); },
+        function () {
+          state.refreshRerunRanking();
+        }
+      );
+    }
 
     if (typeof watch === "function" && state.upScheduleNowMs && typeof state.upScheduleNowMs === "object") {
       watch(

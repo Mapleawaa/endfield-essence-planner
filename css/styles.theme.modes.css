@@ -1545,4 +1545,52 @@ html[data-bg-display="off"][data-theme="light"] body::after {
   color: #2b4663;
 }
 
+/* --- Rerun Timeline light-mode fixes --- */
+[data-theme="light"] .rerun-timeline-bar.past {
+  background: rgba(var(--color-black-rgb), var(--alpha-08));
+  border-color: rgba(var(--color-black-rgb), var(--alpha-16));
+  color: rgba(var(--color-black-rgb), var(--alpha-50));
+}
+[data-theme="light"] .rerun-timeline-bar.active {
+  background: rgba(var(--color-accent-rgb), var(--alpha-85));
+  color: #fff;
+}
+[data-theme="light"] .rerun-timeline-bar.upcoming {
+  background: rgba(var(--color-black-rgb), var(--alpha-03));
+  border-color: rgba(var(--color-black-rgb), var(--alpha-14));
+  color: rgba(var(--color-black-rgb), var(--alpha-40));
+}
+[data-theme="light"] .rerun-timeline-row:nth-child(even) {
+  background: rgba(var(--color-black-rgb), var(--alpha-02));
+}
+[data-theme="light"] .rerun-timeline-row {
+  border-bottom-color: rgba(var(--color-black-rgb), var(--alpha-06));
+}
+[data-theme="light"] .rerun-timeline-left-row:hover {
+  background: rgba(var(--color-black-rgb), var(--alpha-03));
+}
+[data-theme="light"] .rerun-timeline-left-row {
+  border-bottom-color: rgba(var(--color-black-rgb), var(--alpha-06));
+}
+[data-theme="light"] .rerun-timeline-month,
+[data-theme="light"] .rerun-timeline-month-bg {
+  border-right-color: rgba(var(--color-black-rgb), var(--alpha-08));
+}
+[data-theme="light"] .rerun-timeline-legend-dot.past {
+  background: rgba(var(--color-black-rgb), var(--alpha-10));
+  border-color: rgba(var(--color-black-rgb), var(--alpha-18));
+}
+[data-theme="light"] .rerun-timeline-legend-dot.upcoming {
+  background: rgba(var(--color-black-rgb), var(--alpha-04));
+  border-color: rgba(var(--color-black-rgb), var(--alpha-16));
+}
+[data-theme="light"] .rerun-timeline-avatar-fallback {
+  background: rgba(var(--color-black-rgb), var(--alpha-06));
+  border-color: rgba(var(--color-black-rgb), var(--alpha-08));
+}
+[data-theme="light"] .rerun-ranking-empty {
+  background: rgba(var(--color-black-rgb), var(--alpha-03));
+  border-color: rgba(var(--color-black-rgb), var(--alpha-12));
+}
+
 

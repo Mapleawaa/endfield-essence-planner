@@ -84,7 +84,7 @@
       return null;
     }
     const normalized = [];
-    const allowedWindowKeys = new Set(["start", "end"]);
+    const allowedWindowKeys = new Set(["start", "end", "version"]);
     windows.forEach((windowItem, sourceIndex) => {
       if (!windowItem || typeof windowItem !== "object" || Array.isArray(windowItem)) {
         reportIssue({

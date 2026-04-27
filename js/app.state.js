@@ -149,7 +149,11 @@
     state.showMarksImportConfirmModal = ref(false);
     state.showEquipRefiningNavHintDot = ref(false);
     state.showRerunRankingNavHintDot = ref(false);
-    
+    state.rerunTimelineZoom = ref(5.0);
+    state.rerunTimelineShowPreviewAxis = ref(true);
+    state.rerunTimelineFullOverview = ref(false);
+    state.rerunTimelineData = ref(null);
+
     // 拥有状态功能提示相关状态
     state.showWeaponOwnershipHint = ref(false);
     state.weaponOwnershipHintDismissed = ref(false);

@@ -3,83 +3,127 @@
   window.__APP_TEMPLATE_MAIN_PARTS.push(`
           <div v-else-if="currentView === 'rerun-ranking'" key="rerun-ranking" class="view-shell rerun-ranking-view">
             <section class="panel rerun-ranking-panel">
-              <div class="panel-title">
+              <div class="panel-title rerun-ranking-title-row">
                 <h2>{{ t("nav.rerun_ranking") }}</h2>
+                <div class="rerun-ranking-controls">
+                  <label class="rerun-ranking-ctrl" title="缩放时间轴">
+                    <span class="rerun-ranking-ctrl-label">缩放</span>
+                    <input
+                      type="range"
+                      class="rerun-ranking-zoom-slider"
+                      :min="1.5"
+                      :max="15"
+                      :step="0.5"
+                      :value="rerunTimelineZoom"
+                      @input="rerunTimelineSetZoom($event.target.value)"
+                    />
+                    <span class="rerun-ranking-zoom-val">{{ rerunTimelineZoom.toFixed(1) }}x</span>
+                  </label>
+                  <button
+                    class="ghost-button rerun-ranking-ctrl-btn"
+                    :class="{ 'is-active': rerunTimelineFullOverview }"
+                    @click="rerunTimelineToggleFullOverview"
+                    title="切换全览模式"
+                  >全览</button>
+                  <button
+                    class="ghost-button rerun-ranking-ctrl-btn"
+                    :class="{ 'is-active': rerunTimelineShowPreviewAxis }"
+                    @click="rerunTimelineTogglePreviewAxis"
+                    title="切换鼠标预览轴"
+                  >预览轴</button>
+                </div>
               </div>
               <div v-if="!hasRerunRankingRows" class="rerun-ranking-empty">
                 {{ t("rerun.no_rerun_ranking_data") }}
               </div>
-              <div v-else class="rerun-ranking-list">
-                <article
-                  v-for="row in rerunRankingRows"
-                  :key="row.characterName"
-                  class="rerun-ranking-card"
-                >
-                  <div class="rerun-ranking-avatar-shell">
+              <div v-else class="rerun-timeline-legend">
+                <span class="rerun-timeline-legend-item"><span class="rerun-timeline-legend-dot past"></span>已结束</span>
+                <span class="rerun-timeline-legend-item"><span class="rerun-timeline-legend-dot active"></span>正在进行</span>
+                <span class="rerun-timeline-legend-item"><span class="rerun-timeline-legend-dot upcoming"></span>即将到来</span>
+              </div>
+              <div v-if="hasRerunRankingRows && rerunTimelineData" class="rerun-timeline-body" @mousemove="rerunTimelineOnTimelineMove" @mouseleave="rerunTimelineOnTimelineLeave">
+                <div class="rerun-timeline-left">
+                  <div class="rerun-timeline-left-header">角色</div>
+                  <div
+                    v-for="ch in rerunTimelineData.charRows"
+                    :key="ch.name"
+                    class="rerun-timeline-left-row"
+                  >
                     <img
-                      v-if="row.avatarSrc"
-                      class="rerun-ranking-avatar"
-                      v-lazy-src="row.avatarSrc"
-                      :alt="tTerm('character', row.characterName)"
+                      v-if="ch.avatarSrc"
+                      class="rerun-timeline-avatar"
+                      v-lazy-src="ch.avatarSrc"
+                      :alt="tTerm('character', ch.name)"
                       loading="lazy"
                       decoding="async"
                       @error="handleCharacterImageError"
                     />
-                    <div v-else class="rerun-ranking-avatar-fallback">
-                      {{ tTerm("character", row.characterName).slice(0, 1) }}
+                    <div v-else class="rerun-timeline-avatar-fallback">{{ tTerm("character", ch.name).slice(0, 1) }}</div>
+                    <span class="rerun-timeline-char-name">{{ tTerm("character", ch.name) }}</span>
+                    <span v-if="ch.hasActive" class="rerun-timeline-up-badge">UP</span>
+                  </div>
+                </div>
+                <div class="rerun-timeline-right" ref="rerunTimelineRight">
+                  <div class="rerun-timeline-canvas" :style="{ width: rerunTimelineData.canvasW + 'px' }">
+                    <div class="rerun-timeline-header">
+                      <div
+                        v-for="m in rerunTimelineData.months"
+                        :key="m.label"
+                        class="rerun-timeline-month"
+                        :style="{ width: m.wPx + 'px' }"
+                      >{{ m.label }}</div>
+                    </div>
+                    <div class="rerun-timeline-rows-shell" style="position:relative">
+                      <div
+                        v-for="ch in rerunTimelineData.charRows"
+                        :key="ch.name"
+                        class="rerun-timeline-row"
+                      >
+                        <div
+                          v-for="m in rerunTimelineData.months"
+                          :key="m.label"
+                          class="rerun-timeline-month-bg"
+                          :style="{ width: m.wPx + 'px' }"
+                        ></div>
+                        <div
+                          v-for="bar in ch.bars"
+                          :key="bar.startMs"
+                          class="rerun-timeline-bar"
+                          :class="bar.cls"
+                          :style="{ left: bar.leftPx + 'px', width: bar.widthPx + 'px' }"
+                          :data-char-name="bar.charName"
+                          :data-full-label="bar.fullLabel"
+                          :data-status-text="bar.statusText"
+                          :data-duration-days="bar.durationDays + '天'"
+                          :data-version-label="bar.versionLabel"
+                        >{{ bar.dateLabel }}</div>
+                      </div>
+                      <div
+                        v-if="rerunTimelineData.showToday"
+                        class="rerun-timeline-today"
+                        :style="{ left: rerunTimelineData.todayPx + 'px', height: (rerunTimelineData.charRows.length * 52) + 'px' }"
+                      ><span class="rerun-timeline-today-label">今天</span></div>
+                      <div
+                        v-if="rerunTimelineShowPreviewAxis && rerunTimelinePreviewPx !== null"
+                        class="rerun-timeline-preview-axis"
+                        :style="{ left: rerunTimelinePreviewPx + 'px', height: (rerunTimelineData.charRows.length * 52) + 'px' }"
+                      ><span class="rerun-timeline-preview-label">{{ rerunTimelinePreviewDate }}</span></div>
                     </div>
                   </div>
-                  <div class="rerun-ranking-main">
-                    <div class="rerun-ranking-name">{{ tTerm("character", row.characterName) }}</div>
-                    <div class="rerun-ranking-meta">
-                      {{ t("badge.gap_days_days", { days: row.hasEndedHistory ? row.gapDays : "-" }) }}
-                    </div>
-                    <div v-if="row.hasEndedHistory" class="rerun-ranking-gap-bar">
-                      <span
-                        class="rerun-ranking-gap-bar-fill"
-                        :style="{ width: (row.gapRatio * 100) + '%' }"
-                      ></span>
-                    </div>
-                    <div class="rerun-ranking-meta">
-                      {{ t("badge.count_count", { count: row.rerunCount > 0 ? row.rerunCount : "-" }) }}
-                    </div>
-                    <div class="rerun-ranking-meta">
-                      {{
-                        t("badge.last_date", {
-                          date: row.hasEndedHistory
-                            ? new Date(row.lastEndMs).toLocaleDateString(locale || undefined)
-                            : "-",
-                        })
-                      }}
-                    </div>
-                    <div class="rerun-ranking-meta" v-if="row.isUpcoming && row.nextStartMs">
-                      {{
-                        t("rerun.expected_start_date", {
-                          date: new Date(row.nextStartMs).toLocaleDateString(locale || undefined),
-                        })
-                      }}
-                    </div>
-                  </div>
-                  <span v-if="row.isActive" class="weapon-up-chip rerun-ranking-up-chip">
-                    <img
-                      class="weapon-up-chip-icon"
-                      src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAAA8CAMAAACQA+KNAAAAw1BMVEX/8gD/8gD/8QD/8QD/8QH/8QH/8QH/8QH/8gL/8gP/8gP/9ib/8QH/8AH/8QH/8gz/8wL/8QD/8QX/8QD/9Av/8QFBQCTh1gX/8QD/8gH/7wH/8wb/8gF1bxv/9AH/8gCOiBWqoRD/8Ab/8AD/8wD/7wP/8AD/7gT/8QD/7Q1aVyBCQCSpohHFvAv/8gH/7wI1NCb/8wJnYx3/6glOSyK3rg6CfBjw4wL/8wL/8wCclRPUyQn/8wD/7wGpohD/7wApKSmAwyqyAAAAQHRSTlPl2M7FlIt4ZVtINQSBnm4OPuEhsRio/Oi7p1IrUfYYsfLvI+ErP7srug75/O7rnW/9UvcY++3054GB8epuUe5v8HZtSQAAApxJREFUWMPFmdlygkAQRcm+xywo2VBQowaEGIyaxCz8/1cFmIE7oVJFU0PZ/WQmL8ee7nt7WuOkZV7dH18cPRwenO+f7u2etXs3O9tbl8Ym4+Spm0HcSYjwlglinEC85Jm47Y02D9Eyc4hPAcGUieHxY3EdZ+3rFGJgbCIAYfbHeU28p5nggGjNr+75M9FFi/LVhJm36LOAuB4xXEe3PxSZAARHi6YQX0pNMECoiim6gycTQqx+ZCYmDDWR6oTaoiw1IRQT3cGTCdQEZ3eoYhVWdYfVyWKBk6U4yT53lPAi16rhHYCo9g4rzsLFiS1Oss9xKWyrTotCJ3oTfQiEv6ZlQigmRazoEIjZmuaixXW8NQeB8Fck70isXM3EqFmI+IOumNAJfQg7SGJhSwiPBAHFxDyhBeGIf3zLqqBaOca7dnMQxqv40yJMVn2IlTCwxiAiQBAUE9cRojD1IXxAUFy0nIlBExBOjZpovjCjaRIfXp3uIExWWjrhElsUELI7Bg0qJnXaxoM4bBrCt2jj3ZC8GgCEg5NI+cK1GdTxrjCwsMLKC2XGgZCk1/8gZs6qxgtMQlDGuw76Tk1NpED4Xhr2MqjxIMZ1VLooSqCY7xx4JXRCY1NDehAvZKblZbuxCEsHojUvzxMVEKtZPj8ugmAKRdKCEJmgGRjyX45AD8LsYzVAqAk4tBpLQw8CVk59lVt+jEB/amcCYgUXpVPYK32IcX4d7+SdlatgeJADQGzmLRosvU4SkfNHkaZZrOvXRGl7x7HRfSoU81Ma2IRtU3PHvdseKooZsixJpIuq3sG0LlLFiiETECvWndUcPzW8Me4xpYtKA+sxQaA7uDIBF+XcY2KykgbGvsfk+6nhr4FNGLsDss32C/ED45b/F5MPF3B+XRSlAAAAAElFTkSuQmCC"
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      @load="$event.target.closest('.weapon-up-chip')?.classList.remove('is-fallback')"
-                      @error="$event.target.style.display = 'none'; $event.target.closest('.weapon-up-chip')?.classList.add('is-fallback')"
-                    />
-                    <span class="weapon-up-chip-fallback">{{ t("up_badge_text") }}</span>
-                  </span>
-                  <span v-else-if="row.isUpcoming" class="weapon-up-chip rerun-ranking-up-chip rerun-ranking-upcoming-chip is-fallback">
-                    <span class="weapon-up-chip-fallback">{{ t("rerun.upcoming_badge") }}</span>
-                  </span>
-                </article>
+                </div>
+              </div>
+              <div
+                v-if="rerunTimelineTooltip"
+                class="rerun-timeline-tooltip"
+                :style="{ left: rerunTimelineTooltip.x + 14 + 'px', top: rerunTimelineTooltip.y - 52 + 'px' }"
+              >
+                <div class="rerun-timeline-tooltip-name">{{ rerunTimelineTooltip.charName }}</div>
+                <div class="rerun-timeline-tooltip-meta">{{ rerunTimelineTooltip.statusText }} · {{ rerunTimelineTooltip.fullLabel }}</div>
+                <div class="rerun-timeline-tooltip-meta" v-if="rerunTimelineTooltip.versionLabel">{{ rerunTimelineTooltip.versionLabel }}</div>
+                <div class="rerun-timeline-tooltip-meta">持续 {{ rerunTimelineTooltip.durationDays }}</div>
               </div>
             </section>
           </div>
-
           <div v-else-if="currentView === 'match'" key="match" class="view-shell match-view">
             <div class="mobile-tabs">
               <button

@@ -1,31 +1,31 @@
 // Authoring contract:
 // 1) Top-level key must be `characterName`.
 // 2) Each character entry only allows `windows`.
-// 3) Each window only allows string `start` and `end`.
+// 3) Each window only allows string `start`, `end`, and optional string `version`.
 // 4) Do not duplicate weapon/avatar fields in this file.
 window.WEAPON_UP_SCHEDULES = {
   莱万汀: {
     windows: [
-      { start: "2026-01-22T12:00:00+08:00", end: "2026-02-07T12:00:00+08:00" },
-      { start: "2026-05-14T12:00:00+08:00", end: "2026-06-05T12:00:00+08:00" },
+      { start: "2026-01-22T12:00:00+08:00", end: "2026-02-07T12:00:00+08:00", version: "1.0「零号委托」上半" },
+      { start: "2026-05-14T12:00:00+08:00", end: "2026-06-05T12:00:00+08:00", version: "1.2「春晓时」" },
     ],
   },
   洁尔佩塔: {
     windows: [
-      { start: "2026-02-07T12:00:00+08:00", end: "2026-02-24T12:00:00+08:00" },
-      { start: "2026-05-14T12:00:00+08:00", end: "2026-06-05T12:00:00+08:00" },
+      { start: "2026-02-07T12:00:00+08:00", end: "2026-02-24T12:00:00+08:00", version: "1.0「零号委托」中半" },
+      { start: "2026-05-14T12:00:00+08:00", end: "2026-06-05T12:00:00+08:00", version: "1.2「春晓时」" },
     ],
   },
   伊冯: {
-    windows: [{ start: "2026-02-24T12:00:00+08:00", end: "2026-03-12T12:00:00+08:00" }],
+    windows: [{ start: "2026-02-24T12:00:00+08:00", end: "2026-03-12T12:00:00+08:00", version: "1.0「零号委托」下半" }],
   },
   汤汤: {
-    windows: [{ start: "2026-03-12T12:00:00+08:00", end: "2026-03-29T12:00:00+08:00" }],
+    windows: [{ start: "2026-03-12T12:00:00+08:00", end: "2026-03-29T12:00:00+08:00", version: "1.1「新潮起，故渊离」上半" }],
   },
   洛茜: {
-    windows: [{ start: "2026-03-29T12:00:00+08:00", end: "2026-04-17T12:00:00+08:00" }],
+    windows: [{ start: "2026-03-29T12:00:00+08:00", end: "2026-04-17T12:00:00+08:00", version: "1.1「新潮起，故渊离」下半" }],
   },
   庄方宜: {
-    windows: [{ start: "2026-04-17T12:00:00+08:00", end: "2026-05-22T12:00:00+08:00" }],
+    windows: [{ start: "2026-04-17T12:00:00+08:00", end: "2026-05-22T12:00:00+08:00", version: "1.2「春晓时」新六星" }],
   },
 };

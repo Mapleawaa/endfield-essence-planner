@@ -5,6 +5,7 @@ window.I18N["en"] = {
     "preload_note": "First load or hard refresh may be a bit slow",
     "action_retry": "Retry",
     "action_refresh": "Refresh page",
+    "action.update_browser": "Update Browser",
     "词条对照": "Trait Match",
     "赞助支持": "Sponsor Support",
     "支付宝": "Alipay",

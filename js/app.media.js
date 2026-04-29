@@ -1,6 +1,24 @@
 (function () {
   const modules = (window.AppModules = window.AppModules || {});
 
+  const detectBrowserUpdateUrl = () => {
+    if (typeof navigator === "undefined") return "";
+    const ua = (navigator.userAgent || "").toLowerCase();
+    if (ua.includes("msie") || ua.includes("trident/")) {
+      return "https://www.microsoft.com/edge";
+    }
+    if (ua.includes("edg/") || ua.includes("edge/")) {
+      return "https://www.microsoft.com/edge/download";
+    }
+    if (ua.includes("firefox/") || ua.includes("fxios/")) {
+      return "https://www.mozilla.org/firefox/new/";
+    }
+    if (ua.includes("crios/") || ua.includes("chrome/") || ua.includes("chromium/")) {
+      return "https://www.google.com/chrome/";
+    }
+    return "https://browsehappy.com/";
+  };
+
   const avifProbeData =
     "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZgAAAOptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAEOAAEAAAAAAAAAGAAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAamlwcnAAAABLaXBjbwAAAAxhdjFDgSACAAAAABNjb2xybmNseAABAA0AAYAAAAAUaXNwZQAAAAAAAAABAAAAAQAAABBwaXhpAAAAAAMICAgAAAAXaXBtYQAAAAAAAAABAAEEgQIDBAAAACBtZGF0EgAKBzgABlAQ0BkyCxZAAABAAAB5S6v2";
   let avifSupportPromise = null;
@@ -239,4 +257,6 @@
     state.rarityBadgeStyle = rarityBadgeStyle;
     state.rarityTextStyle = rarityTextStyle;
   };
+
+  modules.detectBrowserUpdateUrl = detectBrowserUpdateUrl;
 })();

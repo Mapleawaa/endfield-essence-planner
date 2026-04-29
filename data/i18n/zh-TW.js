@@ -5,6 +5,7 @@ window.I18N["zh-TW"] = {
     "preload_note": "首次開啟或強制重新整理可能稍慢",
     "action_retry": "重試載入",
     "action_refresh": "重新整理頁面",
+    "action.update_browser": "更新瀏覽器",
     "词条对照": "詞條對照",
     "赞助支持": "贊助支持",
     "支付宝": "支付寶",

@@ -7,6 +7,7 @@ window.I18N["zh-CN"] = {
     "action_retry": "重试加载",
     "action_refresh": "刷新页面",
     "action_feedback": "反馈问题",
+    "action.update_browser": "更新浏览器",
     "词条对照": "词条对照",
     "赞助支持": "赞助支持",
     "支付宝": "支付宝",

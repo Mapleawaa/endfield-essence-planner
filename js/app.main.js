@@ -1410,6 +1410,17 @@ return { view: "planner" };
           errorName === "I18nMissingKeyError"
         );
       });
+      const browserUpdateUrl = computed(() => {
+        const current = unifiedExceptionCurrent.value;
+        if (!current || current.__kind !== "runtime") return "";
+        const scope = String(current.scope || "");
+        const errorName = String(current.errorName || "");
+        if (scope !== "compat.avif" && errorName !== "AvifUnsupportedError") return "";
+        const mods = window.AppModules || {};
+        return typeof mods.detectBrowserUpdateUrl === "function"
+          ? mods.detectBrowserUpdateUrl()
+          : "";
+      });
       const unifiedExceptionLogs = computed(() => {
         const runtimeLogs =
           state.runtimeWarningLogs && Array.isArray(state.runtimeWarningLogs.value)
@@ -2020,6 +2031,7 @@ return { view: "planner" };
         activeUnifiedExceptionKind,
         unifiedExceptionLogs,
         unifiedExceptionPreviewText,
+        browserUpdateUrl,
         exportUnifiedExceptionDiagnostic,
         refreshUnifiedException,
         ignoreUnifiedException,

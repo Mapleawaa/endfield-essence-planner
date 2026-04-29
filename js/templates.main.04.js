@@ -201,6 +201,9 @@
               <button class="about-button migration-action migration-action-warn" @click="refreshUnifiedException">
                 {{ activeUnifiedExceptionKind === "runtime" ? t("update.refresh_page") : t("storage.clear_data_and_refresh") }}
               </button>
+              <a v-if="browserUpdateUrl" class="storage-feedback-button" :href="browserUpdateUrl" target="_blank" rel="noreferrer">
+                {{ t("action.update_browser") }}
+              </a>
               <a class="storage-feedback-button" :href="storageFeedbackUrl" target="_blank" rel="noreferrer">
                 {{ t("equip_refining.report_issue") }}
               </a>

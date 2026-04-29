@@ -5,6 +5,7 @@ window.I18N["ja"] = {
     "preload_note": "初回起動や強制リロードは少し時間がかかる場合があります",
     "action_retry": "再試行",
     "action_refresh": "ページを更新",
+    "action.update_browser": "ブラウザを更新",
     "词条对照": "特性対照",
     "赞助支持": "スポンサー支援",
     "支付宝": "Alipay",
